@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Kişisel araç özellikleri ve bakım takibi" />
+  <title>Araç Özellik Bakım</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app-bg" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#/" data-nav>
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">Araç Özellik Bakım</span>
+    </a>
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Menüyü aç" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+    <nav class="nav" id="mainNav" aria-label="Ana menü">
+      <a href="#/" data-nav data-route="/">Ana Sayfa</a>
+      <a href="#/araclar" data-nav data-route="/araclar">Araçlarım</a>
+      <a href="#/bakim" data-nav data-route="/bakim">Bakım</a>
+      <a href="#/hatirlaticilar" data-nav data-route="/hatirlaticilar">Hatırlatıcılar</a>
+      <a href="#/ayarlar" data-nav data-route="/ayarlar">Ayarlar</a>
+    </nav>
+  </header>
+
+  <main id="app" class="main" tabindex="-1"></main>
+
+  <dialog id="formDialog" class="dialog">
+    <form method="dialog" id="entityForm" class="dialog-form">
+      <h2 id="dialogTitle" class="dialog-title"></h2>
+      <div id="dialogFields" class="dialog-fields"></div>
+      <div class="dialog-actions">
+        <button type="submit" value="cancel" class="btn btn-ghost">Vazgeç</button>
+        <button type="submit" value="save" class="btn btn-primary" id="dialogSave">Kaydet</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
