@@ -1,0 +1,17 @@
+{
+  "name": "Araç Özellik Bakım",
+  "install": "python3 --version",
+  "terminals": [
+    {
+      "name": "web",
+      "command": "python3 -m http.server 4173 --bind 0.0.0.0",
+      "description": "Statik geliştirme sunucusu — uygulamayı http://localhost:4173 adresinde sunar"
+    }
+  ],
+  "ports": [
+    {
+      "name": "web server",
+      "port": 4173
+    }
+  ]
+}
