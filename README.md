@@ -2,7 +2,8 @@
 
 Kişisel araç özellikleri ve bakım takibi. Hesap gerekmez; veri tarayıcıda (`localStorage`) saklanır.
 
-**Kalıcı demo:** https://ykslaksoy.github.io/arac-ozellik-bakim/
+**Canlı demo (Vercel):** https://superarac.vercel.app  
+GitHub Pages kapatıldı; site Vercel’e taşındı. (Proje adı `superarac`; kesin URL henüz yoksa bu placeholder.)
 
 ## Çalıştırma
 
