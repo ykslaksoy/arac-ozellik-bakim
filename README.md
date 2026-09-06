@@ -2,6 +2,8 @@
 
 Kişisel araç özellikleri ve bakım takibi. Hesap gerekmez; veri tarayıcıda (`localStorage`) saklanır.
 
+**Kalıcı demo:** https://ykslaksoy.github.io/arac-ozellik-bakim/
+
 ## Çalıştırma
 
 Klasörde herhangi bir statik sunucu:
