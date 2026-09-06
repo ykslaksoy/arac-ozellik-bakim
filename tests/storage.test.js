@@ -20,7 +20,14 @@ const { loadState, saveState, importJson, exportJson, clearAll } = await import(
 
 test("yedek JSON yakıt ve masrafı korur", () => {
   const state = {
-    vehicles: [{ id: "v1", plaka: "34 ABC 123", marka: "Renault", model: "Clio" }],
+    vehicles: [{
+      id: "v1",
+      plaka: "34 ABC 123",
+      marka: "Renault",
+      model: "Clio",
+      renk: "Kırmızı",
+      foto: "data:image/gif;base64,R0lGODlhAQABAAAAACw=",
+    }],
     maintenances: [],
     reminders: [],
     fuels: [{ id: "f1", vehicleId: "v1", tarih: "2026-09-01", km: 20000, litre: 40, ucret: 2000 }],
@@ -33,6 +40,8 @@ test("yedek JSON yakıt ve masrafı korur", () => {
 
   const restored = importJson(exportJson(loaded));
   assert.equal(restored.vehicles[0].plaka, "34 ABC 123");
+  assert.equal(restored.vehicles[0].renk, "Kırmızı");
+  assert.match(restored.vehicles[0].foto, /^data:image\//);
   assert.equal(restored.fuels[0].litre, 40);
   assert.equal(restored.expenses[0].ucret, 80);
 

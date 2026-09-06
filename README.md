@@ -1,4 +1,4 @@
-# Araç Özellik Bakım
+# SüperAraç
 
 Kişisel araç özellikleri ve bakım takibi. Hesap gerekmez; veri tarayıcıda (`localStorage`) saklanır.
 
@@ -18,7 +18,7 @@ Tarayıcı: http://localhost:4173
 
 ## Özellikler
 
-- Ana Sayfa özeti (araç, bakım, km, bu ay yakıt/masraf, hatırlatıcılar)
+- Ana sayfa: 2D araç silüeti (renk/plaka ile boyanır), isteğe bağlı foto, özet kartları, hızlı aksiyonlar, hatırlatıcılar
 - Araçlarım — TR plaka, marka listesi, ekle / düzenle / sil
 - Bakım kayıtları
 - Yakıt — litre, ₺, km, tarih; ortalama L/100 km; ekle / düzenle / sil
@@ -29,7 +29,7 @@ Tarayıcı: http://localhost:4173
 - Yerel gizlilik: veri yalnızca `localStorage`. OBD, CARFAX, GPS yok.
 
 ```bash
-node --test tests/logic.test.js tests/storage.test.js tests/flow.test.js
+node --test tests/logic.test.js tests/storage.test.js tests/flow.test.js tests/hero.test.js
 ```
 
 ## Masaüstü senkron (GitHub)

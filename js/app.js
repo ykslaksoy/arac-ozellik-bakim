@@ -20,6 +20,17 @@ import {
   monthlySnapshot,
   sumField,
 } from "./logic.js";
+import {
+  RENK_SWATCHES,
+  applyCarPalette,
+  bindHeroTilt,
+  compressPhoto,
+  flipHeroRig,
+  heroCaption,
+  heroMode,
+  resolveVehicleColor,
+  silhouetteMarkup,
+} from "./hero.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
 const BAKIM_TUR = [
@@ -37,6 +48,8 @@ let dialogMode = null;
 let editId = null;
 let filterVehicleId = "";
 let filterMonth = currentYearMonth();
+let homeVehicleId = "";
+let formFoto = "";
 
 const app = document.getElementById("app");
 const dialog = document.getElementById("formDialog");
@@ -170,8 +183,69 @@ function emptyState(text) {
   return el("div", { className: "empty", text });
 }
 
+function rememberHomeVehicle(id) {
+  homeVehicleId = id || "";
+  try {
+    if (homeVehicleId) sessionStorage.setItem("aob-home-vehicle", homeVehicleId);
+    else sessionStorage.removeItem("aob-home-vehicle");
+  } catch {
+    /* private mode */
+  }
+}
+
+function restoreHomeVehicle() {
+  if (homeVehicleId && vehicleById(homeVehicleId)) return;
+  try {
+    const stored = sessionStorage.getItem("aob-home-vehicle") || "";
+    if (stored && vehicleById(stored)) homeVehicleId = stored;
+  } catch {
+    /* private mode */
+  }
+}
+
+function selectedHomeVehicle() {
+  restoreHomeVehicle();
+  if (homeVehicleId) {
+    const found = vehicleById(homeVehicleId);
+    if (found) return found;
+  }
+  return state.vehicles[0] || null;
+}
+
+function persistVehiclePatch(id, patch) {
+  state.vehicles = state.vehicles.map((v) => (v.id === id ? { ...v, ...patch } : v));
+  persist();
+}
+
+function paintHeroCopy(root, vehicle) {
+  if (!root) return;
+  const cap = heroCaption(vehicle);
+  const title = root.querySelector("[data-hero-title]");
+  const meta = root.querySelector("[data-hero-meta]");
+  const plate = root.querySelector("[data-hero-plate]");
+  if (title) title.textContent = cap.title;
+  if (meta) meta.textContent = cap.meta;
+  if (plate) {
+    plate.textContent = vehicle?.plaka || "";
+    plate.hidden = !vehicle?.plaka;
+  }
+  const svg = root.querySelector(".car-svg");
+  if (svg) applyCarPalette(svg, vehicle?.renk);
+}
+
+async function readCompressedPhoto(file) {
+  if (!file) return null;
+  try {
+    return await compressPhoto(file);
+  } catch {
+    alert("Görsel yüklenemedi. JPG veya PNG deneyin.");
+    return null;
+  }
+}
+
 function renderHome() {
   const ym = currentYearMonth();
+  const vehicle = selectedHomeVehicle();
   const upcoming = state.reminders
     .map((r) => ({ r, s: reminderStatus(r) }))
     .filter(({ s }) => s.overdue || s.soon)
@@ -182,35 +256,198 @@ function renderHome() {
     })
     .slice(0, 5);
 
-  const totalKm = state.vehicles.reduce((sum, v) => sum + Number(v.km || 0), 0);
-
-  app.append(
-    el("section", { className: "hero" }, [
-      el("h1", { className: "hero-brand", text: "Araç Özellik Bakım" }),
-      el("p", {
-        text: "Kendi aracınızın özelliklerini, yakıt ve masrafını bu cihazda tutun. Sunucuya gönderilmez; OBD, CARFAX veya GPS yoktur.",
+  const garage = el("section", { className: "garage", id: "garageHero" });
+  const chips = el("div", { className: "vehicle-chips" });
+  for (const v of state.vehicles) {
+    chips.append(
+      el("button", {
+        type: "button",
+        className: `vehicle-chip${vehicle && v.id === vehicle.id ? " active" : ""}`,
+        text: v.plaka || `${v.marka} ${v.model}`.trim() || "Araç",
+        onClick: () => {
+          rememberHomeVehicle(v.id);
+          route();
+        },
       }),
-      el("div", { className: "cta-row" }, [
-        el("a", { className: "btn btn-primary", href: "#/araclar", text: "Araç ekle" }),
-        el("a", { className: "btn btn-ghost", href: "#/yakit", text: "Yakıt kaydı" }),
-        el("a", { className: "btn btn-ghost", href: "#/ozet", text: "Aylık özet" }),
+    );
+  }
+
+  const cap = heroCaption(vehicle);
+  const visual = el("div", { className: "hero-visual" });
+  if (heroMode(vehicle) === "photo") {
+    visual.append(
+      el("img", {
+        className: "hero-photo",
+        src: vehicle.foto,
+        alt: cap.title,
+      }),
+    );
+  } else {
+    visual.innerHTML = silhouetteMarkup("hero");
+    applyCarPalette(visual.querySelector(".car-svg"), vehicle?.renk);
+  }
+
+  const plate = el("span", {
+    className: "hero-plate",
+    "data-hero-plate": "",
+    text: vehicle?.plaka || "",
+  });
+  if (!vehicle?.plaka) plate.hidden = true;
+  const rig = el("div", {
+    className: "hero-rig",
+    tabindex: "0",
+    "aria-label": "Aracı sürükleyerek hafifçe çevirin",
+  }, [visual, plate]);
+  bindHeroTilt(rig);
+
+  const tools = el("div", { className: "hero-tools" });
+  if (vehicle) {
+    const colorMini = el("input", {
+      className: "color-mini",
+      type: "color",
+      value: resolveVehicleColor(vehicle.renk),
+      title: "Gövde rengi",
+      "aria-label": "Gövde rengi",
+    });
+    colorMini.addEventListener("input", () => {
+      vehicle.renk = colorMini.value;
+      persist();
+      paintHeroCopy(garage, vehicle);
+    });
+
+    const swatches = el("div", { className: "swatches" });
+    for (const swatch of RENK_SWATCHES) {
+      swatches.append(
+        el("button", {
+          type: "button",
+          className: "swatch",
+          title: swatch.label,
+          "aria-label": swatch.label,
+          style: `--swatch:${resolveVehicleColor(swatch.value)}`,
+          onClick: () => {
+            vehicle.renk = swatch.value;
+            persist();
+            colorMini.value = resolveVehicleColor(swatch.value);
+            paintHeroCopy(garage, vehicle);
+          },
+        }),
+      );
+    }
+
+    const photoLabel = el("label", { className: "btn btn-ghost btn-sm file-btn" }, [
+      vehicle.foto ? "Fotoğrafı değiştir" : "Fotoğraf yükle",
+      el("input", {
+        type: "file",
+        accept: "image/*",
+        style: "display:none",
+        onChange: async (e) => {
+          const dataUrl = await readCompressedPhoto(e.target.files?.[0]);
+          e.target.value = "";
+          if (!dataUrl) return;
+          persistVehiclePatch(vehicle.id, { foto: dataUrl });
+          route();
+        },
+      }),
+    ]);
+
+    tools.append(
+      colorMini,
+      swatches,
+      photoLabel,
+      vehicle.foto
+        ? el("button", {
+            type: "button",
+            className: "btn btn-ghost btn-sm",
+            text: "Silüete dön",
+            onClick: () => {
+              persistVehiclePatch(vehicle.id, { foto: "" });
+              route();
+            },
+          })
+        : null,
+      el("button", {
+        type: "button",
+        className: "btn btn-ghost btn-sm",
+        text: "Çevir",
+        onClick: () => flipHeroRig(rig),
+      }),
+    );
+  } else {
+    tools.append(
+      el("a", { className: "btn btn-primary btn-sm", href: "#/araclar", text: "İlk aracı ekle" }),
+    );
+  }
+
+  garage.append(
+    el("div", { className: "garage-top" }, [
+      el("div", {}, [
+        el("p", { className: "garage-kicker", text: "SüperAraç" }),
+        el("h1", { className: "garage-title", "data-hero-title": "", text: cap.title }),
+        el("p", { className: "garage-meta", "data-hero-meta": "", text: cap.meta }),
       ]),
+      chips,
     ]),
-    el("div", { className: "summary-grid" }, [
-      stat("Araç", String(state.vehicles.length)),
-      stat("Bakım kaydı", String(state.maintenances.length)),
-      stat("Toplam km", totalKm ? totalKm.toLocaleString("tr-TR") : "—"),
-      stat("Bu ay yakıt", fmtMoney(sumField(state.fuels.filter((f) => inYearMonth(f.tarih, ym)), "ucret"))),
-      stat("Bu ay masraf", fmtMoney(sumField(state.expenses.filter((e) => inYearMonth(e.tarih, ym)), "ucret"))),
+    el("div", { className: "hero-stage" }, [
+      rig,
     ]),
-    el("h2", {
-      style: "font-family:var(--font-display);letter-spacing:-0.03em;margin:0 0 0.75rem",
-      text: "Yaklaşan hatırlatıcılar",
+    tools,
+    el("p", {
+      className: "hero-hint",
+      text: vehicle?.foto
+        ? "Fotoğraf isteğe bağlıdır. Silüete dönebilir, sürükleyerek hafifçe çevirebilirsiniz."
+        : "Varsayılan 2D silüet. Renk, marka ve plaka değişince güncellenir — 3D yok.",
     }),
   );
 
+  app.append(
+    garage,
+    el("section", { className: "home-dash" }, [
+      el("div", { className: "dash-grid" }, [
+        dashCard("Araç", String(state.vehicles.length), "Kayıtlı araç"),
+        dashCard("Bakım", String(state.maintenances.length), "Toplam kayıt"),
+        dashCard(
+          "Yakıt",
+          fmtMoney(sumField(state.fuels.filter((f) => inYearMonth(f.tarih, ym)), "ucret")),
+          "Bu ay",
+        ),
+        dashCard(
+          "Masraf",
+          fmtMoney(sumField(state.expenses.filter((e) => inYearMonth(e.tarih, ym)), "ucret")),
+          "Bu ay",
+        ),
+      ]),
+      el("div", { className: "quick-actions" }, [
+        el("a", { className: "quick-action", href: "#/araclar" }, [
+          el("strong", { text: "Araç ekle" }),
+          el("span", { text: "Plaka, marka, renk ve foto" }),
+        ]),
+        el("a", { className: "quick-action", href: "#/yakit" }, [
+          el("strong", { text: "Yakıt kaydı" }),
+          el("span", { text: "Litre, tutar ve km" }),
+        ]),
+        el("a", { className: "quick-action", href: "#/ozet" }, [
+          el("strong", { text: "Aylık özet" }),
+          el("span", { text: "Yakıt + masraf CSV" }),
+        ]),
+      ]),
+    ]),
+  );
+
+  const panel = el("section", { className: "home-panel" }, [
+    el("div", { className: "section-head" }, [
+      el("div", {}, [
+        el("h2", { text: "Yaklaşan hatırlatıcılar" }),
+        el("p", { text: "30 gün veya 1.000 km içindeki işler" }),
+      ]),
+      el("a", { className: "btn btn-ghost btn-sm", href: "#/hatirlaticilar", text: "Tümü" }),
+    ]),
+  ]);
+
   if (!upcoming.length) {
-    app.append(emptyState("Yaklaşan hatırlatıcı yok. Hatırlatıcılar sayfasından ekleyebilirsiniz."));
+    panel.append(
+      emptyState("Yaklaşan hatırlatıcı yok. Hatırlatıcılar sayfasından ekleyebilirsiniz."),
+    );
+    app.append(panel);
     return;
   }
 
@@ -218,7 +455,16 @@ function renderHome() {
   for (const { r, s } of upcoming) {
     list.append(reminderItem(r, s));
   }
-  app.append(list);
+  panel.append(list);
+  app.append(panel);
+}
+
+function dashCard(label, value, hint) {
+  return el("div", { className: "dash-card" }, [
+    el("span", { className: "stat-label", text: label }),
+    el("span", { className: "stat-value", text: value }),
+    hint ? el("span", { className: "stat-label", text: hint }) : null,
+  ]);
 }
 
 function stat(label, value) {
@@ -250,7 +496,14 @@ function renderVehicles() {
   const list = el("div", { className: "list" });
   for (const v of state.vehicles) {
     list.append(
-      el("article", { className: "item" }, [
+      el("article", { className: "item has-media" }, [
+        v.foto
+          ? el("img", { className: "item-thumb", src: v.foto, alt: "" })
+          : el("span", {
+              className: "item-swatch",
+              style: `background:${resolveVehicleColor(v.renk)}`,
+              title: v.renk || "Varsayılan silüet rengi",
+            }),
         el("div", {}, [
           el("h3", { className: "item-title", text: `${v.plaka}` }),
           el("p", {
@@ -364,6 +617,11 @@ function reminderItem(r, s = reminderStatus(r)) {
 
   const bits = [];
   if (r.tarih) bits.push(fmtDate(r.tarih));
+  if (s.byDate != null) {
+    if (s.byDate < 0) bits.push(`${Math.abs(s.byDate)} gün gecikti`);
+    else if (s.byDate === 0) bits.push("Bugün");
+    else if (s.byDate <= 30) bits.push(`${s.byDate} gün`);
+  }
   if (r.hedefKm != null && r.hedefKm !== "") {
     bits.push(`${Number(r.hedefKm).toLocaleString("tr-TR")} km`);
   }
@@ -962,7 +1220,69 @@ function field(label, name, opts = {}) {
 function openVehicleForm(vehicle) {
   dialogMode = "vehicle";
   editId = vehicle?.id || null;
+  formFoto = vehicle?.foto || "";
   dialogTitle.textContent = vehicle ? "Aracı düzenle" : "Yeni araç";
+  const colorWrap = el("div", { className: "field full" });
+  colorWrap.append(el("label", { for: "renk", text: "Renk" }));
+  const renkInput = el("input", {
+    id: "renk",
+    name: "renk",
+    type: "text",
+    placeholder: "Kırmızı veya #b42318",
+  });
+  renkInput.value = vehicle?.renk || "";
+  const picker = el("input", {
+    type: "color",
+    id: "renkPicker",
+    value: resolveVehicleColor(vehicle?.renk),
+    title: "Renk seç",
+    "aria-label": "Renk seç",
+  });
+  const swatches = el("div", { className: "swatches" });
+  for (const swatch of RENK_SWATCHES) {
+    swatches.append(
+      el("button", {
+        type: "button",
+        className: "swatch",
+        title: swatch.label,
+        "aria-label": swatch.label,
+        style: `--swatch:${resolveVehicleColor(swatch.value)}`,
+        onClick: (e) => {
+          e.preventDefault();
+          renkInput.value = swatch.value;
+          picker.value = resolveVehicleColor(swatch.value);
+          updateVehicleFormPreview();
+        },
+      }),
+    );
+  }
+  const preview = el("div", { className: "form-preview", id: "vehiclePreview" });
+  preview.innerHTML = silhouetteMarkup("form");
+  colorWrap.append(el("div", { className: "color-row" }, [picker, renkInput]), swatches, preview);
+
+  const photoWrap = el("div", { className: "field full" }, [
+    el("label", { for: "fotoFile", text: "Fotoğraf (isteğe bağlı)" }),
+    el("input", {
+      id: "fotoFile",
+      type: "file",
+      accept: "image/*",
+    }),
+  ]);
+  if (formFoto) {
+    photoWrap.append(
+      el("img", { className: "photo-preview", src: formFoto, alt: "Araç fotoğrafı" }),
+      el("button", {
+        type: "button",
+        className: "btn btn-ghost btn-sm",
+        text: "Fotoğrafı kaldır",
+        onClick: () => {
+          formFoto = "";
+          photoWrap.querySelector(".photo-preview")?.remove();
+        },
+      }),
+    );
+  }
+
   dialogFields.replaceChildren(
     el("div", { className: "form-grid" }, [
       plateField(vehicle?.plaka || ""),
@@ -981,12 +1301,41 @@ function openVehicleForm(vehicle) {
       }),
       field("Şasi no", "sasi", { value: vehicle?.sasi || "" }),
       field("Motor", "motor", { value: vehicle?.motor || "" }),
-      field("Renk", "renk", { full: true, value: vehicle?.renk || "" }),
+      colorWrap,
+      photoWrap,
     ]),
   );
   const yakit = dialogFields.querySelector("#yakit");
   if (yakit && vehicle?.yakit) yakit.value = vehicle.yakit;
+
+  const syncPicker = () => {
+    picker.value = resolveVehicleColor(renkInput.value);
+    updateVehicleFormPreview();
+  };
+  renkInput.addEventListener("input", syncPicker);
+  picker.addEventListener("input", () => {
+    renkInput.value = picker.value;
+    updateVehicleFormPreview();
+  });
+  dialogFields.querySelector("#fotoFile").addEventListener("change", async (e) => {
+    const dataUrl = await readCompressedPhoto(e.target.files?.[0]);
+    e.target.value = "";
+    if (!dataUrl) return;
+    formFoto = dataUrl;
+    photoWrap.querySelector(".photo-preview")?.remove();
+    photoWrap.append(el("img", { className: "photo-preview", src: formFoto, alt: "Araç fotoğrafı" }));
+  });
+  ["#plaka", "#marka", "#model"].forEach((sel) => {
+    dialogFields.querySelector(sel)?.addEventListener("input", updateVehicleFormPreview);
+  });
+  updateVehicleFormPreview();
   dialog.showModal();
+}
+
+function updateVehicleFormPreview() {
+  const preview = dialogFields.querySelector("#vehiclePreview");
+  if (!preview) return;
+  applyCarPalette(preview.querySelector(".car-svg"), dialogFields.querySelector("#renk")?.value);
 }
 
 function openMaintenanceForm(row) {
@@ -1067,6 +1416,7 @@ function openReminderForm(row) {
 
 function deleteVehicle(id) {
   if (!confirm("Bu araç ve bağlı bakım, yakıt, masraf ve hatırlatıcılar silinsin mi?")) return;
+  if (homeVehicleId === id) rememberHomeVehicle("");
   state.vehicles = state.vehicles.filter((v) => v.id !== id);
   state.maintenances = state.maintenances.filter((m) => m.vehicleId !== id);
   state.reminders = state.reminders.filter((r) => r.vehicleId !== id);
@@ -1079,6 +1429,7 @@ function deleteVehicle(id) {
 function readForm() {
   const data = {};
   dialogFields.querySelectorAll("input, select, textarea").forEach((input) => {
+    if (!input.name || input.type === "file" || input.type === "color") return;
     data[input.name] = input.value.trim();
   });
   return data;
@@ -1111,7 +1462,9 @@ form.addEventListener("submit", (e) => {
       sasi: data.sasi,
       motor: data.motor,
       renk: data.renk,
+      foto: formFoto || "",
     };
+    rememberHomeVehicle(payload.id);
     if (editId) {
       state.vehicles = state.vehicles.map((v) => (v.id === editId ? payload : v));
     } else {
@@ -1213,6 +1566,7 @@ form.addEventListener("submit", (e) => {
   dialog.close();
   dialogMode = null;
   editId = null;
+  formFoto = "";
   route();
 });
 
