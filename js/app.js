@@ -6,6 +6,20 @@ import {
   importJson,
   clearAll,
 } from "./storage.js";
+import {
+  MARKALAR,
+  MASRAF_KALEMLERI,
+  costPerKm,
+  csvFilename,
+  currentYearMonth,
+  formatTrPlate,
+  inYearMonth,
+  isValidTrPlate,
+  litersPer100km,
+  monthlyCsv,
+  monthlySnapshot,
+  sumField,
+} from "./logic.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
 const BAKIM_TUR = [
@@ -21,6 +35,8 @@ const BAKIM_TUR = [
 let state = loadState();
 let dialogMode = null;
 let editId = null;
+let filterVehicleId = "";
+let filterMonth = currentYearMonth();
 
 const app = document.getElementById("app");
 const dialog = document.getElementById("formDialog");
@@ -50,6 +66,9 @@ function route() {
   if (path === "/") renderHome();
   else if (path === "/araclar") renderVehicles();
   else if (path === "/bakim") renderMaintenance();
+  else if (path === "/yakit") renderFuel();
+  else if (path === "/masraf") renderExpenses();
+  else if (path === "/ozet") renderSummary();
   else if (path === "/hatirlaticilar") renderReminders();
   else if (path === "/ayarlar") renderSettings();
   else renderHome();
@@ -72,13 +91,27 @@ function fmtDate(iso) {
   return d.toLocaleDateString("tr-TR");
 }
 
-function fmtMoney(n) {
+function fmtMoney(n, digits = 2) {
   if (n === "" || n == null || Number.isNaN(Number(n))) return "—";
   return new Intl.NumberFormat("tr-TR", {
     style: "currency",
     currency: "TRY",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
   }).format(Number(n));
+}
+
+function fmtRate(n, suffix) {
+  if (n == null || Number.isNaN(Number(n))) return "—";
+  return `${Number(n).toLocaleString("tr-TR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+  })} ${suffix}`;
+}
+
+function rowsForVehicle(rows, vehicleId = filterVehicleId) {
+  if (!vehicleId) return rows;
+  return rows.filter((row) => row.vehicleId === vehicleId);
 }
 
 function daysUntil(iso) {
@@ -138,6 +171,7 @@ function emptyState(text) {
 }
 
 function renderHome() {
+  const ym = currentYearMonth();
   const upcoming = state.reminders
     .map((r) => ({ r, s: reminderStatus(r) }))
     .filter(({ s }) => s.overdue || s.soon)
@@ -154,17 +188,20 @@ function renderHome() {
     el("section", { className: "hero" }, [
       el("h1", { className: "hero-brand", text: "Araç Özellik Bakım" }),
       el("p", {
-        text: "Kendi aracınızın özelliklerini ve bakım geçmişini tek yerde tutun. Veriler bu cihazda saklanır.",
+        text: "Kendi aracınızın özelliklerini, yakıt ve masrafını bu cihazda tutun. Sunucuya gönderilmez; OBD, CARFAX veya GPS yoktur.",
       }),
       el("div", { className: "cta-row" }, [
         el("a", { className: "btn btn-primary", href: "#/araclar", text: "Araç ekle" }),
-        el("a", { className: "btn btn-ghost", href: "#/bakim", text: "Bakım kaydı" }),
+        el("a", { className: "btn btn-ghost", href: "#/yakit", text: "Yakıt kaydı" }),
+        el("a", { className: "btn btn-ghost", href: "#/ozet", text: "Aylık özet" }),
       ]),
     ]),
     el("div", { className: "summary-grid" }, [
       stat("Araç", String(state.vehicles.length)),
       stat("Bakım kaydı", String(state.maintenances.length)),
       stat("Toplam km", totalKm ? totalKm.toLocaleString("tr-TR") : "—"),
+      stat("Bu ay yakıt", fmtMoney(sumField(state.fuels.filter((f) => inYearMonth(f.tarih, ym)), "ucret"))),
+      stat("Bu ay masraf", fmtMoney(sumField(state.expenses.filter((e) => inYearMonth(e.tarih, ym)), "ucret"))),
     ]),
     el("h2", {
       style: "font-family:var(--font-display);letter-spacing:-0.03em;margin:0 0 0.75rem",
@@ -399,7 +436,7 @@ function renderSettings() {
     sectionHead("Ayarlar", "Yedekleme, içe aktarma ve veri temizliği"),
     el("div", { className: "settings-block" }, [
       el("p", {
-        text: "Uygulama verisi bu tarayıcının localStorage alanındadır. Kaynak kod senkronu için GitHub kullanın.",
+        text: "Tüm veri bu tarayıcının localStorage alanındadır (araç, bakım, yakıt, masraf, hatırlatıcı). Sunucuya veya üçüncü tarafa gitmez.",
       }),
       el("div", { className: "cta-row", style: "margin:1rem 0" }, [
         el("button", {
@@ -426,7 +463,7 @@ function renderSettings() {
           className: "btn btn-danger",
           text: "Tüm veriyi sil",
           onClick: () => {
-            if (!confirm("Tüm araç, bakım ve hatırlatıcılar silinsin mi?")) return;
+            if (!confirm("Tüm araç, bakım, yakıt, masraf ve hatırlatıcılar silinsin mi?")) return;
             clearAll();
             state = loadState();
             route();
@@ -466,6 +503,425 @@ async function onImportFile(e) {
   }
 }
 
+function vehicleOptions(includeAll = false) {
+  const options = state.vehicles.map((v) => ({
+    value: v.id,
+    label: `${v.plaka} · ${v.marka} ${v.model}`,
+  }));
+  return includeAll ? [{ value: "", label: "Tüm araçlar" }, ...options] : options;
+}
+
+function plateField(value) {
+  const wrap = field("Plaka", "plaka", {
+    required: true,
+    value: value || "",
+    placeholder: "34 ABC 123",
+  });
+  const input = wrap.querySelector("#plaka");
+  const hint = el("span", {
+    className: "hint",
+    text: "Türkiye plakası. Örn. 34 ABC 123",
+  });
+  wrap.append(hint);
+  const refresh = () => {
+    if (input.value.trim()) input.value = formatTrPlate(input.value);
+    const ok = !input.value.trim() || isValidTrPlate(input.value);
+    input.classList.toggle("invalid", !ok);
+    hint.textContent = ok
+      ? "Türkiye plakası. Örn. 34 ABC 123"
+      : "Geçersiz plaka. İl kodu 01–81 olmalıdır.";
+    hint.classList.toggle("error", !ok);
+  };
+  input.addEventListener("blur", refresh);
+  return wrap;
+}
+
+function brandField(value) {
+  const wrap = field("Marka", "marka", {
+    required: true,
+    value: value || "",
+    placeholder: "Listeden seçin veya yazın",
+  });
+  const input = wrap.querySelector("#marka");
+  input.setAttribute("list", "markaList");
+  const list = el("datalist", { id: "markaList" });
+  for (const brand of MARKALAR) list.append(el("option", { value: brand }));
+  wrap.append(list);
+  return wrap;
+}
+
+function vehicleFilter(onChange = route) {
+  const wrap = field("Araç", "filterVehicle", {
+    type: "select",
+    options: vehicleOptions(true),
+  });
+  const select = wrap.querySelector("#filterVehicle");
+  select.value = filterVehicleId;
+  select.addEventListener("change", () => {
+    filterVehicleId = select.value;
+    onChange();
+  });
+  return wrap;
+}
+
+function maybeBumpVehicleKm(vehicleId, km) {
+  const value = Number(km);
+  if (!vehicleId || !Number.isFinite(value) || value <= 0) return;
+  state.vehicles = state.vehicles.map((v) => {
+    if (v.id !== vehicleId) return v;
+    if (Number(v.km || 0) >= value) return v;
+    return { ...v, km: value };
+  });
+}
+
+function renderFuel() {
+  const rows = rowsForVehicle(state.fuels).sort((a, b) =>
+    String(b.tarih).localeCompare(String(a.tarih)),
+  );
+  const avg = litersPer100km(rowsForVehicle(state.fuels));
+
+  app.append(
+    sectionHead(
+      "Yakıt",
+      "Litre, tutar, km ve tarih. Ortalama depo-depo L/100 km hesaplanır.",
+      el("button", {
+        type: "button",
+        className: "btn btn-primary",
+        text: "Yakıt ekle",
+        onClick: () => openFuelForm(),
+        disabled: state.vehicles.length ? null : "true",
+      }),
+    ),
+    el("div", { className: "filters" }, [
+      vehicleFilter(),
+      stat("Kayıt", String(rows.length)),
+      stat("Ortalama", fmtRate(avg, "L/100 km")),
+      stat("Toplam", fmtMoney(sumField(rows, "ucret"))),
+    ]),
+  );
+
+  if (!state.vehicles.length) {
+    app.append(emptyState("Önce bir araç ekleyin."));
+    return;
+  }
+  if (!rows.length) {
+    app.append(emptyState("Yakıt kaydı yok. İlk dolumu ekleyin."));
+    return;
+  }
+
+  const list = el("div", { className: "list" });
+  for (const row of rows) {
+    list.append(
+      el("article", { className: "item" }, [
+        el("div", {}, [
+          el("h3", {
+            className: "item-title",
+            text: `${Number(row.litre).toLocaleString("tr-TR")} L · ${fmtMoney(row.ucret)}`,
+          }),
+          el("p", {
+            className: "item-meta",
+            text: `${vehicleLabel(row.vehicleId)} · ${fmtDate(row.tarih)} · ${Number(row.km || 0).toLocaleString("tr-TR")} km`,
+          }),
+          row.not ? el("p", { className: "item-meta", text: row.not }) : null,
+        ]),
+        el("div", { className: "item-actions" }, [
+          el("button", {
+            type: "button",
+            className: "btn btn-ghost btn-sm",
+            text: "Düzenle",
+            onClick: () => openFuelForm(row),
+          }),
+          el("button", {
+            type: "button",
+            className: "btn btn-danger btn-sm",
+            text: "Sil",
+            onClick: () => {
+              state.fuels = state.fuels.filter((x) => x.id !== row.id);
+              persist();
+              route();
+            },
+          }),
+        ]),
+      ]),
+    );
+  }
+  app.append(list);
+}
+
+function renderExpenses() {
+  const rows = rowsForVehicle(state.expenses).sort((a, b) =>
+    String(b.tarih).localeCompare(String(a.tarih)),
+  );
+  const fuels = rowsForVehicle(state.fuels);
+  const distance = (() => {
+    const kms = fuels.map((f) => Number(f.km)).filter((n) => n > 0);
+    if (kms.length < 2) return null;
+    const span = Math.max(...kms) - Math.min(...kms);
+    return span > 0 ? span : null;
+  })();
+  const total = sumField(rows, "ucret");
+  const perKm = costPerKm(total, distance);
+
+  app.append(
+    sectionHead(
+      "Masraf",
+      "Kalem ve tutar. ₺/km, yakıt km aralığına göre hesaplanır.",
+      el("button", {
+        type: "button",
+        className: "btn btn-primary",
+        text: "Masraf ekle",
+        onClick: () => openExpenseForm(),
+        disabled: state.vehicles.length ? null : "true",
+      }),
+    ),
+    el("div", { className: "filters" }, [
+      vehicleFilter(),
+      stat("Kalem", String(rows.length)),
+      stat("Toplam", fmtMoney(total)),
+      stat("₺/km", fmtRate(perKm, "₺/km")),
+    ]),
+  );
+
+  if (!state.vehicles.length) {
+    app.append(emptyState("Önce bir araç ekleyin."));
+    return;
+  }
+  if (!rows.length) {
+    app.append(emptyState("Masraf kaydı yok."));
+    return;
+  }
+
+  const list = el("div", { className: "list" });
+  for (const row of rows) {
+    list.append(
+      el("article", { className: "item" }, [
+        el("div", {}, [
+          el("h3", { className: "item-title", text: `${row.kalem} · ${fmtMoney(row.ucret)}` }),
+          el("p", {
+            className: "item-meta",
+            text: `${vehicleLabel(row.vehicleId)} · ${fmtDate(row.tarih)}${row.km ? ` · ${Number(row.km).toLocaleString("tr-TR")} km` : ""}`,
+          }),
+          row.not ? el("p", { className: "item-meta", text: row.not }) : null,
+        ]),
+        el("div", { className: "item-actions" }, [
+          el("button", {
+            type: "button",
+            className: "btn btn-ghost btn-sm",
+            text: "Düzenle",
+            onClick: () => openExpenseForm(row),
+          }),
+          el("button", {
+            type: "button",
+            className: "btn btn-danger btn-sm",
+            text: "Sil",
+            onClick: () => {
+              state.expenses = state.expenses.filter((x) => x.id !== row.id);
+              persist();
+              route();
+            },
+          }),
+        ]),
+      ]),
+    );
+  }
+  app.append(list);
+}
+
+function currentSummary() {
+  const vehicle = filterVehicleId ? vehicleById(filterVehicleId) : null;
+  const fuels = rowsForVehicle(state.fuels);
+  const expenses = rowsForVehicle(state.expenses);
+  const maintenances = rowsForVehicle(state.maintenances);
+  return monthlySnapshot({
+    vehicle: vehicle || { id: "", plaka: "Tüm araçlar", marka: "", model: "" },
+    fuels,
+    expenses,
+    maintenances,
+    yearMonth: filterMonth,
+  });
+}
+
+function downloadMonthlyCsv(snapshot) {
+  const blob = new Blob([`\uFEFF${monthlyCsv(snapshot)}`], {
+    type: "text/csv;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = csvFilename(snapshot);
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function renderSummary() {
+  if (!filterMonth) filterMonth = currentYearMonth();
+  const snapshot = currentSummary();
+
+  const monthField = field("Ay", "filterMonth", {
+    type: "month",
+    value: filterMonth,
+  });
+  const monthInput = monthField.querySelector("#filterMonth");
+  monthInput.addEventListener("change", () => {
+    filterMonth = monthInput.value || currentYearMonth();
+    route();
+  });
+
+  app.append(
+    sectionHead(
+      "Aylık özet",
+      "Seçilen ayın yakıt ve masrafı. CSV Excel (TR) için noktalı virgüllüdür.",
+      el("button", {
+        type: "button",
+        className: "btn btn-primary",
+        text: "CSV indir",
+        onClick: () => downloadMonthlyCsv(snapshot),
+        disabled: snapshot.fuelCount || snapshot.expenseCount ? null : "true",
+      }),
+    ),
+    el("div", { className: "filters" }, [vehicleFilter(), monthField]),
+    el("div", { className: "summary-grid" }, [
+      stat("Yakıt", fmtMoney(snapshot.fuelCost)),
+      stat("Masraf", fmtMoney(snapshot.expenseCost)),
+      stat("Toplam", fmtMoney(snapshot.operatingCost)),
+      stat("Litre", snapshot.litres ? snapshot.litres.toLocaleString("tr-TR") : "—"),
+      stat("Ort. L/100 km", fmtRate(snapshot.consumption, "")),
+      stat("₺/km", fmtRate(snapshot.costPerKm, "₺/km")),
+    ]),
+  );
+
+  if (!state.vehicles.length) {
+    app.append(emptyState("Önce bir araç ekleyin."));
+    return;
+  }
+
+  if (!snapshot.fuelCount && !snapshot.expenseCount) {
+    app.append(emptyState("Bu ay için yakıt veya masraf yok."));
+    return;
+  }
+
+  const table = el("table", { className: "data" }, [
+    el("thead", {}, [
+      el("tr", {}, [
+        el("th", { text: "Tür" }),
+        el("th", { text: "Tarih" }),
+        el("th", { text: "Km" }),
+        el("th", { text: "Litre / kalem" }),
+        el("th", { text: "Tutar" }),
+      ]),
+    ]),
+  ]);
+  const tbody = el("tbody");
+  for (const row of snapshot.fuels) {
+    tbody.append(
+      el("tr", {}, [
+        el("td", { text: "Yakıt" }),
+        el("td", { text: fmtDate(row.tarih) }),
+        el("td", { text: Number(row.km || 0).toLocaleString("tr-TR") }),
+        el("td", { text: `${Number(row.litre).toLocaleString("tr-TR")} L` }),
+        el("td", { text: fmtMoney(row.ucret) }),
+      ]),
+    );
+  }
+  for (const row of snapshot.expenses) {
+    tbody.append(
+      el("tr", {}, [
+        el("td", { text: "Masraf" }),
+        el("td", { text: fmtDate(row.tarih) }),
+        el("td", { text: row.km ? Number(row.km).toLocaleString("tr-TR") : "—" }),
+        el("td", { text: row.kalem || "—" }),
+        el("td", { text: fmtMoney(row.ucret) }),
+      ]),
+    );
+  }
+  table.append(tbody);
+  app.append(el("div", { className: "table-scroll" }, [table]));
+}
+
+function openFuelForm(row) {
+  if (!state.vehicles.length) return;
+  dialogMode = "fuel";
+  editId = row?.id || null;
+  dialogTitle.textContent = row ? "Yakıtı düzenle" : "Yakıt kaydı";
+  dialogFields.replaceChildren(
+    el("div", { className: "form-grid" }, [
+      field("Araç", "vehicleId", {
+        type: "select",
+        required: true,
+        options: vehicleOptions(),
+      }),
+      field("Tarih", "tarih", {
+        type: "date",
+        required: true,
+        value: row?.tarih || new Date().toISOString().slice(0, 10),
+      }),
+      field("Km", "km", {
+        type: "number",
+        min: 0,
+        required: true,
+        value: row?.km ?? "",
+      }),
+      field("Litre", "litre", {
+        type: "number",
+        min: 0,
+        step: "0.01",
+        required: true,
+        value: row?.litre ?? "",
+      }),
+      field("Tutar (₺)", "ucret", {
+        type: "number",
+        min: 0,
+        step: "0.01",
+        required: true,
+        value: row?.ucret ?? "",
+      }),
+      field("Not", "not", { type: "textarea", full: true, value: row?.not || "" }),
+    ]),
+  );
+  const vehicleSelect = dialogFields.querySelector("#vehicleId");
+  vehicleSelect.value = row?.vehicleId || filterVehicleId || state.vehicles[0].id;
+  dialog.showModal();
+}
+
+function openExpenseForm(row) {
+  if (!state.vehicles.length) return;
+  dialogMode = "expense";
+  editId = row?.id || null;
+  dialogTitle.textContent = row ? "Masrafı düzenle" : "Masraf kalemi";
+  dialogFields.replaceChildren(
+    el("div", { className: "form-grid" }, [
+      field("Araç", "vehicleId", {
+        type: "select",
+        required: true,
+        options: vehicleOptions(),
+      }),
+      field("Kalem", "kalem", {
+        type: "select",
+        required: true,
+        options: MASRAF_KALEMLERI,
+      }),
+      field("Tarih", "tarih", {
+        type: "date",
+        required: true,
+        value: row?.tarih || new Date().toISOString().slice(0, 10),
+      }),
+      field("Tutar (₺)", "ucret", {
+        type: "number",
+        min: 0,
+        step: "0.01",
+        required: true,
+        value: row?.ucret ?? "",
+      }),
+      field("Km", "km", { type: "number", min: 0, value: row?.km ?? "" }),
+      field("Not", "not", { type: "textarea", full: true, value: row?.not || "" }),
+    ]),
+  );
+  dialogFields.querySelector("#vehicleId").value =
+    row?.vehicleId || filterVehicleId || state.vehicles[0].id;
+  if (row?.kalem) dialogFields.querySelector("#kalem").value = row.kalem;
+  dialog.showModal();
+}
+
 function field(label, name, opts = {}) {
   const wrap = el("div", { className: `field${opts.full ? " full" : ""}` });
   wrap.append(el("label", { for: name, text: label }));
@@ -483,6 +939,7 @@ function field(label, name, opts = {}) {
       name,
       type: opts.type || "text",
       step: opts.step || undefined,
+      list: opts.list || undefined,
       min: opts.min || undefined,
       required: opts.required ? "true" : undefined,
       placeholder: opts.placeholder || "",
@@ -499,8 +956,8 @@ function openVehicleForm(vehicle) {
   dialogTitle.textContent = vehicle ? "Aracı düzenle" : "Yeni araç";
   dialogFields.replaceChildren(
     el("div", { className: "form-grid" }, [
-      field("Plaka", "plaka", { required: true, value: vehicle?.plaka || "" }),
-      field("Marka", "marka", { required: true, value: vehicle?.marka || "" }),
+      plateField(vehicle?.plaka || ""),
+      brandField(vehicle?.marka || ""),
       field("Model", "model", { required: true, value: vehicle?.model || "" }),
       field("Yıl", "yil", { type: "number", min: 1950, value: vehicle?.yil || "" }),
       field("Yakıt", "yakit", {
@@ -600,10 +1057,12 @@ function openReminderForm(row) {
 }
 
 function deleteVehicle(id) {
-  if (!confirm("Bu araç ve bağlı bakım/hatırlatıcılar silinsin mi?")) return;
+  if (!confirm("Bu araç ve bağlı bakım, yakıt, masraf ve hatırlatıcılar silinsin mi?")) return;
   state.vehicles = state.vehicles.filter((v) => v.id !== id);
   state.maintenances = state.maintenances.filter((m) => m.vehicleId !== id);
   state.reminders = state.reminders.filter((r) => r.vehicleId !== id);
+  state.fuels = state.fuels.filter((f) => f.vehicleId !== id);
+  state.expenses = state.expenses.filter((e) => e.vehicleId !== id);
   persist();
   route();
 }
@@ -628,9 +1087,13 @@ form.addEventListener("submit", (e) => {
 
   if (dialogMode === "vehicle") {
     if (!data.plaka || !data.marka || !data.model) return;
+    if (!isValidTrPlate(data.plaka)) {
+      alert("Geçerli bir Türkiye plakası girin. Örn. 34 ABC 123");
+      return;
+    }
     const payload = {
       id: editId || uid(),
-      plaka: data.plaka.toUpperCase(),
+      plaka: formatTrPlate(data.plaka),
       marka: data.marka,
       model: data.model,
       yil: data.yil,
@@ -667,6 +1130,54 @@ form.addEventListener("submit", (e) => {
     } else {
       state.maintenances.push(payload);
     }
+  }
+
+  if (dialogMode === "fuel") {
+    if (!data.vehicleId || !data.tarih || data.km === "" || data.litre === "" || data.ucret === "") {
+      return;
+    }
+    const payload = {
+      id: editId || uid(),
+      vehicleId: data.vehicleId,
+      tarih: data.tarih,
+      km: Number(data.km),
+      litre: Number(data.litre),
+      ucret: Number(data.ucret),
+      not: data.not,
+    };
+    if (!(payload.km >= 0) || !(payload.litre > 0) || !(payload.ucret >= 0)) {
+      alert("Km, litre ve tutar geçerli sayı olmalıdır.");
+      return;
+    }
+    if (editId) {
+      state.fuels = state.fuels.map((row) => (row.id === editId ? payload : row));
+    } else {
+      state.fuels.push(payload);
+    }
+    maybeBumpVehicleKm(payload.vehicleId, payload.km);
+  }
+
+  if (dialogMode === "expense") {
+    if (!data.vehicleId || !data.kalem || !data.tarih || data.ucret === "") return;
+    const payload = {
+      id: editId || uid(),
+      vehicleId: data.vehicleId,
+      kalem: data.kalem,
+      tarih: data.tarih,
+      ucret: Number(data.ucret),
+      km: data.km === "" ? "" : Number(data.km),
+      not: data.not,
+    };
+    if (!(payload.ucret >= 0)) {
+      alert("Tutar geçerli bir sayı olmalıdır.");
+      return;
+    }
+    if (editId) {
+      state.expenses = state.expenses.map((row) => (row.id === editId ? payload : row));
+    } else {
+      state.expenses.push(payload);
+    }
+    maybeBumpVehicleKm(payload.vehicleId, payload.km);
   }
 
   if (dialogMode === "reminder") {
