@@ -4,18 +4,25 @@ const defaultState = () => ({
   vehicles: [],
   maintenances: [],
   reminders: [],
+  fuels: [],
+  expenses: [],
 });
+
+function normalizeState(parsed) {
+  return {
+    vehicles: Array.isArray(parsed?.vehicles) ? parsed.vehicles : [],
+    maintenances: Array.isArray(parsed?.maintenances) ? parsed.maintenances : [],
+    reminders: Array.isArray(parsed?.reminders) ? parsed.reminders : [],
+    fuels: Array.isArray(parsed?.fuels) ? parsed.fuels : [],
+    expenses: Array.isArray(parsed?.expenses) ? parsed.expenses : [],
+  };
+}
 
 export function loadState() {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultState();
-    const parsed = JSON.parse(raw);
-    return {
-      vehicles: Array.isArray(parsed.vehicles) ? parsed.vehicles : [],
-      maintenances: Array.isArray(parsed.maintenances) ? parsed.maintenances : [],
-      reminders: Array.isArray(parsed.reminders) ? parsed.reminders : [],
-    };
+    return normalizeState(JSON.parse(raw));
   } catch {
     return defaultState();
   }
@@ -36,11 +43,7 @@ export function exportJson(state) {
 export function importJson(text) {
   const parsed = JSON.parse(text);
   if (!parsed || typeof parsed !== "object") throw new Error("Geçersiz dosya");
-  return {
-    vehicles: Array.isArray(parsed.vehicles) ? parsed.vehicles : [],
-    maintenances: Array.isArray(parsed.maintenances) ? parsed.maintenances : [],
-    reminders: Array.isArray(parsed.reminders) ? parsed.reminders : [],
-  };
+  return normalizeState(parsed);
 }
 
 export function clearAll() {

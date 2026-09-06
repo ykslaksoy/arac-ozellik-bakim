@@ -2,6 +2,8 @@
 
 Kişisel araç özellikleri ve bakım takibi. Hesap gerekmez; veri tarayıcıda (`localStorage`) saklanır.
 
+**Kalıcı demo:** https://ykslaksoy.github.io/arac-ozellik-bakim/
+
 ## Çalıştırma
 
 Klasörde herhangi bir statik sunucu:
@@ -13,13 +15,21 @@ python3 -m http.server 4173
 
 Tarayıcı: http://localhost:4173
 
-## Özellikler (MVP)
+## Özellikler
 
-- Ana Sayfa özeti (araç sayısı, bakım, km, yaklaşan hatırlatıcılar)
-- Araçlarım — ekle / düzenle / sil
+- Ana Sayfa özeti (araç, bakım, km, bu ay yakıt/masraf, hatırlatıcılar)
+- Araçlarım — TR plaka, marka listesi, ekle / düzenle / sil
 - Bakım kayıtları
+- Yakıt — litre, ₺, km, tarih; ortalama L/100 km; ekle / düzenle / sil
+- Masraf kalemleri ve ₺/km
+- Aylık özet + CSV (Excel TR: `;` ayırıcı, PDF yok)
 - Hatırlatıcılar (tarih veya km)
 - Ayarlar — JSON yedekle / yükle / tüm veriyi sil
+- Yerel gizlilik: veri yalnızca `localStorage`. OBD, CARFAX, GPS yok.
+
+```bash
+node --test tests/logic.test.js tests/storage.test.js tests/flow.test.js
+```
 
 ## Masaüstü senkron (GitHub)
 
