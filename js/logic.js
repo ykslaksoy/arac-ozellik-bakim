@@ -184,6 +184,7 @@ export function monthlySnapshot({
     kmSpan(monthFuels) ??
     kmSpan(fuelsForMonth(fuels, yearMonth, { includePriorFill: true })) ??
     kmSpan([...monthFuels, ...monthExpenses]);
+  const byDateDesc = (a, b) => String(b.tarih || "").localeCompare(String(a.tarih || ""));
   const operatingCost = fuelCost + expenseCost;
   return {
     vehicleId: vehicle?.id || "",
@@ -205,8 +206,8 @@ export function monthlySnapshot({
     fuelPerKm: costPerKm(fuelCost, distance),
     expensePerKm: costPerKm(expenseCost, distance),
     costPerKm: costPerKm(operatingCost, distance),
-    fuels: monthFuels,
-    expenses: monthExpenses,
+    fuels: [...monthFuels].sort(byDateDesc),
+    expenses: [...monthExpenses].sort(byDateDesc),
   };
 }
 
@@ -266,9 +267,25 @@ export function monthlyCsv(snapshot) {
   return `${lines.map((line) => line.map(csvCell).join(";")).join("\r\n")}\r\n`;
 }
 
+export function slugTr(text) {
+  return (
+    String(text || "arac")
+      .toLocaleLowerCase("tr-TR")
+      .replaceAll("ı", "i")
+      .replaceAll("ğ", "g")
+      .replaceAll("ü", "u")
+      .replaceAll("ş", "s")
+      .replaceAll("ö", "o")
+      .replaceAll("ç", "c")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "arac"
+  );
+}
+
 export function csvFilename(snapshot) {
-  const plate = normalizePlate(snapshot.vehicleLabel.split("·")[0] || "arac")
-    .replace(/\s+/g, "-")
-    .toLowerCase();
-  return `ozet-${plate || "arac"}-${snapshot.yearMonth}.csv`;
+  const head = String(snapshot.vehicleLabel || "arac").split("·")[0].trim();
+  const slug = isValidTrPlate(head)
+    ? formatTrPlate(head).replace(/\s+/g, "-").toLowerCase()
+    : slugTr(head);
+  return `ozet-${slug}-${snapshot.yearMonth}.csv`;
 }

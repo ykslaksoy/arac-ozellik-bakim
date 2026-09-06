@@ -82,9 +82,14 @@ test("₺/km ve aylık özet + CSV", () => {
   assert.match(csv, /Yakıt \(₺\);3\.750,00/);
   assert.match(csv, /Masraf \(₺\);150,00/);
   assert.match(csv, /Otopark/);
+  assert.match(csv, /Yakıt;2026-09-18;20500;35;;1750;/);
   assert.match(csv, /Yakıt;2026-09-01;20000;40;;2000;İlk/);
   assert.doesNotMatch(csv, /eski ay/);
   assert.equal(csvFilename(snapshot), "ozet-34-abc-123-2026-09.csv");
+  assert.equal(
+    csvFilename({ vehicleLabel: "Tüm araçlar", yearMonth: "2026-09" }),
+    "ozet-tum-araclar-2026-09.csv",
+  );
 });
 
 test("currentYearMonth biçimi YYYY-MM", () => {

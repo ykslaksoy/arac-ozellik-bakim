@@ -26,7 +26,7 @@ Tarayıcı: http://localhost:4173
 - Yerel gizlilik: veri yalnızca `localStorage`. OBD, CARFAX, GPS yok.
 
 ```bash
-node --test tests/*.test.js
+node --test tests/logic.test.js tests/storage.test.js tests/flow.test.js
 ```
 
 ## Masaüstü senkron (GitHub)

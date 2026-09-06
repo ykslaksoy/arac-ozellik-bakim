@@ -575,6 +575,7 @@ function maybeBumpVehicleKm(vehicleId, km) {
 }
 
 function renderFuel() {
+  ensureVehicleFilter();
   const rows = rowsForVehicle(state.fuels).sort((a, b) =>
     String(b.tarih).localeCompare(String(a.tarih)),
   );
@@ -649,6 +650,7 @@ function renderFuel() {
 }
 
 function renderExpenses() {
+  ensureVehicleFilter();
   const rows = rowsForVehicle(state.expenses).sort((a, b) =>
     String(b.tarih).localeCompare(String(a.tarih)),
   );
@@ -727,13 +729,20 @@ function renderExpenses() {
   app.append(list);
 }
 
+function ensureVehicleFilter() {
+  if (!filterVehicleId && state.vehicles.length === 1) {
+    filterVehicleId = state.vehicles[0].id;
+  }
+}
+
 function currentSummary() {
+  ensureVehicleFilter();
   const vehicle = filterVehicleId ? vehicleById(filterVehicleId) : null;
   const fuels = rowsForVehicle(state.fuels);
   const expenses = rowsForVehicle(state.expenses);
   const maintenances = rowsForVehicle(state.maintenances);
   return monthlySnapshot({
-    vehicle: vehicle || { id: "", plaka: "Tüm araçlar", marka: "", model: "" },
+    vehicle,
     fuels,
     expenses,
     maintenances,
