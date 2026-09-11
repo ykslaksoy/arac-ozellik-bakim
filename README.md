@@ -1,9 +1,9 @@
-# Araç Özellik Bakım
+# SüperAraç
 
 Kişisel araç özellikleri ve bakım takibi. Hesap gerekmez; veri tarayıcıda (`localStorage`) saklanır.
 
 **Canlı demo (Vercel):** https://superarac.vercel.app  
-GitHub Pages kapatıldı; site Vercel’e taşındı. (Proje adı `superarac`; kesin URL henüz yoksa bu placeholder.)
+GitHub Pages kapatıldı; site Vercel’de.
 
 ## Çalıştırma
 
@@ -18,7 +18,8 @@ Tarayıcı: http://localhost:4173
 
 ## Özellikler
 
-- Ana Sayfa özeti (araç, bakım, km, bu ay yakıt/masraf, hatırlatıcılar)
+- Dikey ana sayfa (Megane hero, Tara/Yakıt/Masraf/Özet, metrik şeridi, alt nav)
+- Ana Sayfa özeti (bu ay yakıt/masraf, L/100, son bakım km)
 - Araçlarım — TR plaka, marka listesi, ekle / düzenle / sil
 - Bakım kayıtları
 - Yakıt — litre, ₺, km, tarih; ortalama L/100 km; ekle / düzenle / sil
@@ -29,7 +30,7 @@ Tarayıcı: http://localhost:4173
 - Yerel gizlilik: veri yalnızca `localStorage`. OBD, CARFAX, GPS yok.
 
 ```bash
-node --test tests/logic.test.js tests/storage.test.js tests/flow.test.js
+node --test tests/logic.test.js tests/storage.test.js tests/flow.test.js tests/home.test.js
 ```
 
 ## Masaüstü senkron (GitHub)

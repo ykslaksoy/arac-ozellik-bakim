@@ -2,38 +2,36 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Kişisel araç özellikleri ve bakım takibi" />
-  <title>Araç Özellik Bakım</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="SüperAraç — kişisel araç özellikleri, yakıt, masraf ve bakım takibi" />
+  <meta name="application-name" content="SüperAraç" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#f4f6f7" />
+  <title>SüperAraç</title>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <div class="app-bg" aria-hidden="true"></div>
+  <div class="phone">
+    <header class="app-header">
+      <a class="brand" href="#/" data-nav>SüperAraç</a>
+      <div class="obd-pill" data-obd aria-live="polite">
+        <span class="obd-dot" aria-hidden="true"></span>
+        <span>OBD Bağlı değil</span>
+      </div>
+    </header>
 
-  <header class="topbar">
-    <a class="brand" href="#/" data-nav>
-      <span class="brand-mark" aria-hidden="true"></span>
-      <span class="brand-text">Araç Özellik Bakım</span>
-    </a>
-    <button type="button" class="nav-toggle" id="navToggle" aria-label="Menüyü aç" aria-expanded="false">
-      <span></span><span></span>
-    </button>
-    <nav class="nav" id="mainNav" aria-label="Ana menü">
-      <a href="#/" data-nav data-route="/">Ana Sayfa</a>
-      <a href="#/araclar" data-nav data-route="/araclar">Araçlarım</a>
-      <a href="#/bakim" data-nav data-route="/bakim">Bakım</a>
-      <a href="#/yakit" data-nav data-route="/yakit">Yakıt</a>
-      <a href="#/masraf" data-nav data-route="/masraf">Masraf</a>
-      <a href="#/ozet" data-nav data-route="/ozet">Özet</a>
-      <a href="#/hatirlaticilar" data-nav data-route="/hatirlaticilar">Hatırlatıcılar</a>
-      <a href="#/ayarlar" data-nav data-route="/ayarlar">Ayarlar</a>
-    </nav>
-  </header>
+    <main id="app" class="main" tabindex="-1"></main>
 
-  <main id="app" class="main" tabindex="-1"></main>
+    <nav class="tabbar" id="tabbar" aria-label="Alt menü"></nav>
+  </div>
 
   <dialog id="formDialog" class="dialog">
     <form method="dialog" id="entityForm" class="dialog-form">
