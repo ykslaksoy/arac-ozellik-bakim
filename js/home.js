@@ -9,6 +9,14 @@ import {
 } from "./logic.js";
 
 export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
+export const DEFAULT_HERO_INDEX = 1;
+export const DEFAULT_HERO_GALLERY = [
+  { id: "front", src: "assets/hero-megane-front.png" },
+  { id: "three-quarter", src: "assets/hero-megane.png" },
+  { id: "side", src: "assets/hero-megane-side.png" },
+  { id: "rear-quarter", src: "assets/hero-megane-rear-q.png" },
+  { id: "rear", src: "assets/hero-megane-rear.png" },
+];
 export const HERO_PLATE = "34 MKB 421";
 export const HINT_KEY = "aob-rotate-hint";
 export const OBD_PILL = {
@@ -122,9 +130,36 @@ export function maybeSeedDemo(state, persistFn) {
   return state;
 }
 
-export function heroImageSrc(vehicle) {
-  if (vehicle?.foto) return vehicle.foto;
-  return DEFAULT_HERO_SRC;
+export function userHeroPhotos(vehicle) {
+  const extras = [];
+  if (vehicle?.foto) extras.push(vehicle.foto);
+  if (Array.isArray(vehicle?.fotos)) {
+    for (const src of vehicle.fotos) {
+      if (src) extras.push(src);
+    }
+  }
+  return [...new Set(extras)];
+}
+
+export function heroSlides(vehicle) {
+  return [...DEFAULT_HERO_GALLERY.map((slide) => slide.src), ...userHeroPhotos(vehicle)];
+}
+
+export function clampHeroIndex(index, length) {
+  if (!length) return 0;
+  const n = Number(index);
+  if (!Number.isFinite(n)) return 0;
+  return ((Math.trunc(n) % length) + length) % length;
+}
+
+export function nextHeroIndex(index, length, delta = 1) {
+  return clampHeroIndex((Number(index) || 0) + delta, length);
+}
+
+export function heroImageSrc(vehicle, index = DEFAULT_HERO_INDEX) {
+  const slides = heroSlides(vehicle);
+  if (!slides.length) return DEFAULT_HERO_SRC;
+  return slides[clampHeroIndex(index, slides.length)];
 }
 
 /** Hero üzerinde model / yıl / motor / EDC yazılmaz. */

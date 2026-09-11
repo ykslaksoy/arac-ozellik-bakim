@@ -21,17 +21,20 @@ import {
   sumField,
 } from "./logic.js";
 import {
+  DEFAULT_HERO_INDEX,
   HINT_KEY,
   HOME_ACTIONS_BOTTOM,
   HOME_ACTIONS_TOP,
   TAB_ITEMS,
-  heroImageSrc,
+  clampHeroIndex,
+  heroSlides,
   homeMetrics,
   homeVehicle,
   iconSvg,
   maybeSeedDemo,
   metricCards,
   tabActive,
+  userHeroPhotos,
 } from "./home.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
@@ -57,6 +60,7 @@ const form = document.getElementById("entityForm");
 const dialogTitle = document.getElementById("dialogTitle");
 const dialogFields = document.getElementById("dialogFields");
 const tabbar = document.getElementById("tabbar");
+let heroSlideIndex = DEFAULT_HERO_INDEX;
 
 maybeSeedDemo(state, saveState);
 
@@ -221,39 +225,71 @@ function actionRow(items) {
   return row;
 }
 
-function bindHeroTilt(rig) {
+function paintHeroDots(dots, index, length) {
+  dots.replaceChildren();
+  for (let i = 0; i < length; i += 1) {
+    dots.append(
+      el("button", {
+        type: "button",
+        className: `hero-dot${i === index ? " active" : ""}`,
+        "aria-label": `Fotoğraf ${i + 1}`,
+        onClick: () => {
+          heroSlideIndex = i;
+          const track = dots.parentElement?.querySelector(".hero-track");
+          if (track) setHeroTrack(track, i, length);
+          paintHeroDots(dots, i, length);
+        },
+      }),
+    );
+  }
+}
+
+function setHeroTrack(track, index, length) {
+  const i = clampHeroIndex(index, length);
+  track.style.transform = `translateX(${-i * 100}%)`;
+}
+
+function bindHeroCarousel(stage, track, dots, length) {
   let startX = 0;
-  let angle = 0;
   let dragging = false;
+  let origin = 0;
 
-  const set = (next) => {
-    angle = Math.max(-18, Math.min(18, next));
-    rig.style.transform = `rotateY(${angle}deg)`;
+  const go = (index) => {
+    heroSlideIndex = clampHeroIndex(index, length);
+    setHeroTrack(track, heroSlideIndex, length);
+    paintHeroDots(dots, heroSlideIndex, length);
   };
 
-  const onMove = (clientX) => {
-    const dx = clientX - startX;
-    set(dx / 8);
-  };
-
-  rig.addEventListener("pointerdown", (e) => {
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".foto-chip, .hero-dots")) return;
     dragging = true;
     startX = e.clientX;
-    rig.classList.add("is-dragging");
-    rig.setPointerCapture(e.pointerId);
+    origin = heroSlideIndex;
+    stage.classList.add("is-dragging");
+    stage.setPointerCapture(e.pointerId);
   });
-  rig.addEventListener("pointermove", (e) => {
+  stage.addEventListener("pointermove", (e) => {
     if (!dragging) return;
-    onMove(e.clientX);
+    const dx = e.clientX - startX;
+    const width = stage.clientWidth || 1;
+    track.style.transform = `translateX(${-(origin * 100) + (dx / width) * 100}%)`;
   });
-  const end = () => {
+  const end = (e) => {
     if (!dragging) return;
     dragging = false;
-    rig.classList.remove("is-dragging");
-    set(0);
+    stage.classList.remove("is-dragging");
+    const dx = e.clientX - startX;
+    if (dx < -40) go(origin + 1);
+    else if (dx > 40) go(origin - 1);
+    else go(origin);
   };
-  rig.addEventListener("pointerup", end);
-  rig.addEventListener("pointercancel", end);
+  stage.addEventListener("pointerup", end);
+  stage.addEventListener("pointercancel", end);
+
+  stage.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") go(heroSlideIndex - 1);
+    if (e.key === "ArrowRight") go(heroSlideIndex + 1);
+  });
 }
 
 async function readCompressedPhoto(file) {
@@ -286,27 +322,31 @@ function renderHome() {
   const vehicle = homeVehicle(state);
   const cards = metricCards(homeMetrics(state));
   const showHint = localStorage.getItem(HINT_KEY) !== "1";
+  const slides = heroSlides(vehicle);
+  heroSlideIndex = clampHeroIndex(heroSlideIndex, slides.length);
 
-  const photo = el("img", {
-    className: "hero-photo",
-    src: heroImageSrc(vehicle),
-    alt: "",
-    draggable: "false",
-  });
-  const rig = el("div", {
-    className: "hero-rig",
+  const track = el("div", { className: "hero-track" });
+  for (const src of slides) {
+    track.append(
+      el("img", {
+        className: "hero-photo",
+        src,
+        alt: "",
+        draggable: "false",
+      }),
+    );
+  }
+  setHeroTrack(track, heroSlideIndex, slides.length);
+
+  const stage = el("div", {
+    className: "hero-stage",
     tabindex: "0",
-    "aria-label": "Arabayı sürükleyerek çevirebilirsiniz",
-  }, [photo]);
-  bindHeroTilt(rig);
+    "aria-label": "Arabayı kaydırarak diğer açıları görün",
+  }, [track]);
 
-  const dots = el("div", { className: "hero-dots", "aria-hidden": "true" }, [
-    el("span"),
-    el("span"),
-    el("span", { className: "active" }),
-    el("span"),
-    el("span"),
-  ]);
+  const dots = el("div", { className: "hero-dots" });
+  paintHeroDots(dots, heroSlideIndex, slides.length);
+  bindHeroCarousel(stage, track, dots, slides.length);
 
   const foto = el("label", { className: "foto-chip" });
   foto.innerHTML = `${iconSvg("camera")}<span>Foto</span>`;
@@ -318,17 +358,16 @@ function renderHome() {
         const dataUrl = await readCompressedPhoto(e.target.files?.[0]);
         e.target.value = "";
         if (!dataUrl || !vehicle) return;
-        persistVehiclePatch(vehicle.id, { foto: dataUrl });
+        const fotos = userHeroPhotos(vehicle).filter((src) => src !== dataUrl);
+        fotos.push(dataUrl);
+        persistVehiclePatch(vehicle.id, { foto: dataUrl, fotos });
+        heroSlideIndex = heroSlides({ ...vehicle, foto: dataUrl, fotos }).length - 1;
         route();
       },
     }),
   );
 
-  const hero = el("section", { className: "hero-card" }, [
-    el("div", { className: "hero-stage" }, [rig]),
-    dots,
-    foto,
-  ]);
+  const hero = el("section", { className: "hero-card" }, [stage, dots, foto]);
 
   const home = el("div", { className: "home" }, [hero]);
 
@@ -1265,6 +1304,7 @@ form.addEventListener("submit", (e) => {
       motor: data.motor,
       renk: data.renk,
       foto: previous?.foto || "",
+      fotos: Array.isArray(previous?.fotos) ? previous.fotos : [],
     };
     if (editId) {
       state.vehicles = state.vehicles.map((v) => (v.id === editId ? payload : v));

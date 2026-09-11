@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  DEFAULT_HERO_GALLERY,
+  DEFAULT_HERO_INDEX,
   DEFAULT_HERO_SRC,
   HERO_PLATE,
   HOME_ACTIONS_BOTTOM,
@@ -13,8 +15,11 @@ import {
   formatLitres,
   formatRemainingKm,
   formatWholeTl,
+  clampHeroIndex,
   heroCaptionHidden,
   heroImageSrc,
+  heroSlides,
+  nextHeroIndex,
   homeMetrics,
   homeVehicle,
   maybeSeedDemo,
@@ -56,7 +61,31 @@ test("metrik kartları kilitli mock metinlerini üretir", () => {
 test("hero: model/yıl/motor/EDC yazısı yok, varsayılan Megane görseli", () => {
   assert.equal(heroCaptionHidden(), true);
   assert.equal(heroImageSrc({}), DEFAULT_HERO_SRC);
-  assert.equal(heroImageSrc({ foto: "data:image/jpeg;base64,xx" }), "data:image/jpeg;base64,xx");
+  assert.equal(heroImageSrc({}, DEFAULT_HERO_INDEX), DEFAULT_HERO_SRC);
+});
+
+test("hero galeri: 5 açı, kaydırma döngüsü, kullanıcı foto eklenir", () => {
+  assert.equal(DEFAULT_HERO_GALLERY.length, 5);
+  assert.deepEqual(
+    DEFAULT_HERO_GALLERY.map((s) => s.id),
+    ["front", "three-quarter", "side", "rear-quarter", "rear"],
+  );
+  const builtIn = heroSlides({});
+  assert.equal(builtIn.length, 5);
+  assert.equal(builtIn[0], "assets/hero-megane-front.png");
+  assert.equal(builtIn[1], DEFAULT_HERO_SRC);
+  assert.ok(builtIn.every((src) => src.startsWith("assets/hero-megane")));
+
+  const withUser = heroSlides({
+    foto: "data:image/jpeg;base64,aa",
+    fotos: ["data:image/jpeg;base64,bb"],
+  });
+  assert.equal(withUser.length, 7);
+  assert.equal(withUser[5], "data:image/jpeg;base64,aa");
+  assert.equal(withUser[6], "data:image/jpeg;base64,bb");
+  assert.equal(clampHeroIndex(-1, 5), 4);
+  assert.equal(nextHeroIndex(4, 5, 1), 0);
+  assert.equal(heroImageSrc({ foto: "data:image/jpeg;base64,xx" }, 5), "data:image/jpeg;base64,xx");
 });
 
 test("OBD pill bağlı değil; halka/overlay yok", () => {
