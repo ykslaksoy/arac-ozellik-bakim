@@ -20,6 +20,19 @@ import {
   monthlySnapshot,
   sumField,
 } from "./logic.js";
+import {
+  HINT_KEY,
+  HOME_ACTIONS_BOTTOM,
+  HOME_ACTIONS_TOP,
+  TAB_ITEMS,
+  heroImageSrc,
+  homeMetrics,
+  homeVehicle,
+  iconSvg,
+  maybeSeedDemo,
+  metricCards,
+  tabActive,
+} from "./home.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
 const BAKIM_TUR = [
@@ -43,22 +56,43 @@ const dialog = document.getElementById("formDialog");
 const form = document.getElementById("entityForm");
 const dialogTitle = document.getElementById("dialogTitle");
 const dialogFields = document.getElementById("dialogFields");
-const navToggle = document.getElementById("navToggle");
-const mainNav = document.getElementById("mainNav");
+const tabbar = document.getElementById("tabbar");
+
+maybeSeedDemo(state, saveState);
 
 function persist() {
   saveState(state);
 }
 
-function route() {
+function currentPath() {
   const hash = location.hash.replace(/^#/, "") || "/";
-  const path = hash.split("?")[0] || "/";
-  document.querySelectorAll("[data-route]").forEach((a) => {
-    a.classList.toggle("active", a.dataset.route === path);
-  });
-  mainNav.classList.remove("open");
-  navToggle.setAttribute("aria-expanded", "false");
+  return hash.split("?")[0] || "/";
+}
+
+function renderTabbar(path) {
+  tabbar.replaceChildren();
+  for (const item of TAB_ITEMS) {
+    const link = el("a", {
+      href: item.href,
+      "data-nav": "",
+      "data-route": item.route,
+      className: tabActive(path, item.route) ? "active" : "",
+    });
+    link.innerHTML = iconSvg(item.icon);
+    link.append(el("span", { text: item.label }));
+    if (item.badge && state.vehicles.length) {
+      link.append(el("span", { className: "tab-badge", text: String(state.vehicles.length) }));
+    }
+    tabbar.append(link);
+  }
+}
+
+function route() {
+  const path = currentPath();
+  maybeSeedDemo(state, saveState);
+  renderTabbar(path);
   app.replaceChildren();
+  app.classList.toggle("page-home", path === "/");
   app.style.animation = "none";
   void app.offsetWidth;
   app.style.animation = "";
@@ -71,6 +105,11 @@ function route() {
   else if (path === "/ozet") renderSummary();
   else if (path === "/hatirlaticilar") renderReminders();
   else if (path === "/ayarlar") renderSettings();
+  else if (path === "/tara") renderPlaceholder("Tara", "Plaka veya evrak taraması yakında. Viewfinder ile belge çekeceksiniz.");
+  else if (path === "/ariza") renderPlaceholder("Arıza", "Arıza kayıtları yakında. OBD bağlantısı yok; kodları elle girebilirsiniz.");
+  else if (path === "/gizli") renderPlaceholder("Gizli özellik", "Gizli özellik listesi yakında. Bu ekran yalnızca yer tutucudur.");
+  else if (path === "/ekspertiz") renderPlaceholder("Ekspertiz", "Ekspertiz notları yakında. Hasar ve ekspertiz kaydı burada tutulacak.");
+  else if (path === "/performans") renderPlaceholder("Performans", "Tüketim ve masraf eğrisi yakında. Özet sayfasındaki veriler korunur.");
   else renderHome();
 }
 
@@ -170,55 +209,168 @@ function emptyState(text) {
   return el("div", { className: "empty", text });
 }
 
+function actionRow(items) {
+  const row = el("nav", { className: "action-row" });
+  for (const item of items) {
+    const link = el("a", { href: item.href, "data-nav": "" });
+    const ico = el("span", { className: "action-ico" });
+    ico.innerHTML = iconSvg(item.icon);
+    link.append(ico, el("span", { text: item.label }));
+    row.append(link);
+  }
+  return row;
+}
+
+function bindHeroTilt(rig) {
+  let startX = 0;
+  let angle = 0;
+  let dragging = false;
+
+  const set = (next) => {
+    angle = Math.max(-18, Math.min(18, next));
+    rig.style.transform = `rotateY(${angle}deg)`;
+  };
+
+  const onMove = (clientX) => {
+    const dx = clientX - startX;
+    set(dx / 8);
+  };
+
+  rig.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    startX = e.clientX;
+    rig.classList.add("is-dragging");
+    rig.setPointerCapture(e.pointerId);
+  });
+  rig.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    onMove(e.clientX);
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    rig.classList.remove("is-dragging");
+    set(0);
+  };
+  rig.addEventListener("pointerup", end);
+  rig.addEventListener("pointercancel", end);
+}
+
+async function readCompressedPhoto(file) {
+  if (!file) return null;
+  try {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const max = 1400;
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    return canvas.toDataURL("image/jpeg", 0.82);
+  } catch {
+    alert("Görsel yüklenemedi. JPG veya PNG deneyin.");
+    return null;
+  }
+}
+
+function persistVehiclePatch(id, patch) {
+  state.vehicles = state.vehicles.map((v) => (v.id === id ? { ...v, ...patch } : v));
+  persist();
+}
+
 function renderHome() {
-  const ym = currentYearMonth();
-  const upcoming = state.reminders
-    .map((r) => ({ r, s: reminderStatus(r) }))
-    .filter(({ s }) => s.overdue || s.soon)
-    .sort((a, b) => {
-      const da = a.s.byDate ?? 9999;
-      const db = b.s.byDate ?? 9999;
-      return da - db;
-    })
-    .slice(0, 5);
+  const vehicle = homeVehicle(state);
+  const cards = metricCards(homeMetrics(state));
+  const showHint = localStorage.getItem(HINT_KEY) !== "1";
 
-  const totalKm = state.vehicles.reduce((sum, v) => sum + Number(v.km || 0), 0);
+  const photo = el("img", {
+    className: "hero-photo",
+    src: heroImageSrc(vehicle),
+    alt: "",
+    draggable: "false",
+  });
+  const rig = el("div", {
+    className: "hero-rig",
+    tabindex: "0",
+    "aria-label": "Arabayı sürükleyerek çevirebilirsiniz",
+  }, [photo]);
+  bindHeroTilt(rig);
 
-  app.append(
-    el("section", { className: "hero" }, [
-      el("h1", { className: "hero-brand", text: "Araç Özellik Bakım" }),
-      el("p", {
-        text: "Kendi aracınızın özelliklerini, yakıt ve masrafını bu cihazda tutun. Sunucuya gönderilmez; OBD, CARFAX veya GPS yoktur.",
-      }),
-      el("div", { className: "cta-row" }, [
-        el("a", { className: "btn btn-primary", href: "#/araclar", text: "Araç ekle" }),
-        el("a", { className: "btn btn-ghost", href: "#/yakit", text: "Yakıt kaydı" }),
-        el("a", { className: "btn btn-ghost", href: "#/ozet", text: "Aylık özet" }),
-      ]),
-    ]),
-    el("div", { className: "summary-grid" }, [
-      stat("Araç", String(state.vehicles.length)),
-      stat("Bakım kaydı", String(state.maintenances.length)),
-      stat("Toplam km", totalKm ? totalKm.toLocaleString("tr-TR") : "—"),
-      stat("Bu ay yakıt", fmtMoney(sumField(state.fuels.filter((f) => inYearMonth(f.tarih, ym)), "ucret"))),
-      stat("Bu ay masraf", fmtMoney(sumField(state.expenses.filter((e) => inYearMonth(e.tarih, ym)), "ucret"))),
-    ]),
-    el("h2", {
-      style: "font-family:var(--font-display);letter-spacing:-0.03em;margin:0 0 0.75rem",
-      text: "Yaklaşan hatırlatıcılar",
+  const dots = el("div", { className: "hero-dots", "aria-hidden": "true" }, [
+    el("span"),
+    el("span"),
+    el("span", { className: "active" }),
+    el("span"),
+    el("span"),
+  ]);
+
+  const foto = el("label", { className: "foto-chip" });
+  foto.innerHTML = `${iconSvg("camera")}<span>Foto</span>`;
+  foto.append(
+    el("input", {
+      type: "file",
+      accept: "image/*",
+      onChange: async (e) => {
+        const dataUrl = await readCompressedPhoto(e.target.files?.[0]);
+        e.target.value = "";
+        if (!dataUrl || !vehicle) return;
+        persistVehiclePatch(vehicle.id, { foto: dataUrl });
+        route();
+      },
     }),
   );
 
-  if (!upcoming.length) {
-    app.append(emptyState("Yaklaşan hatırlatıcı yok. Hatırlatıcılar sayfasından ekleyebilirsiniz."));
-    return;
+  const hero = el("section", { className: "hero-card" }, [
+    el("div", { className: "hero-stage" }, [rig]),
+    dots,
+    foto,
+  ]);
+
+  const home = el("div", { className: "home" }, [hero]);
+
+  if (showHint) {
+    const hint = el("div", { className: "home-hint" });
+    const copy = el("p");
+    copy.innerHTML = `${iconSvg("bulb")}<span>İpucu · Arabayı sürükleyerek çevirebilirsiniz</span>`;
+    hint.append(
+      copy,
+      el("button", {
+        type: "button",
+        text: "Anladım",
+        onClick: () => {
+          localStorage.setItem(HINT_KEY, "1");
+          hint.remove();
+        },
+      }),
+    );
+    home.append(hint);
   }
 
-  const list = el("div", { className: "list" });
-  for (const { r, s } of upcoming) {
-    list.append(reminderItem(r, s));
-  }
-  app.append(list);
+  home.append(
+    actionRow(HOME_ACTIONS_TOP),
+    el("div", { className: "metric-strip" }, cards.map((card) =>
+      el("div", { className: "metric" }, [
+        el("span", { className: "metric-label", text: card.label }),
+        el("span", { className: "metric-value", text: card.value }),
+        el("span", { className: "metric-hint", text: card.hint }),
+      ]),
+    )),
+    actionRow(HOME_ACTIONS_BOTTOM),
+  );
+
+  app.append(home);
+}
+
+function renderPlaceholder(title, text) {
+  app.append(
+    el("div", { className: "page-pad" }, [
+      sectionHead(title, text),
+    ]),
+  );
 }
 
 function stat(label, value) {
@@ -1100,6 +1252,7 @@ form.addEventListener("submit", (e) => {
       alert("Geçerli bir Türkiye plakası girin. Örn. 34 ABC 123");
       return;
     }
+    const previous = editId ? state.vehicles.find((v) => v.id === editId) : null;
     const payload = {
       id: editId || uid(),
       plaka: formatTrPlate(data.plaka),
@@ -1111,6 +1264,7 @@ form.addEventListener("submit", (e) => {
       sasi: data.sasi,
       motor: data.motor,
       renk: data.renk,
+      foto: previous?.foto || "",
     };
     if (editId) {
       state.vehicles = state.vehicles.map((v) => (v.id === editId ? payload : v));
@@ -1214,11 +1368,6 @@ form.addEventListener("submit", (e) => {
   dialogMode = null;
   editId = null;
   route();
-});
-
-navToggle.addEventListener("click", () => {
-  const open = mainNav.classList.toggle("open");
-  navToggle.setAttribute("aria-expanded", String(open));
 });
 
 window.addEventListener("hashchange", route);
