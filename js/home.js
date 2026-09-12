@@ -10,13 +10,16 @@ import {
 
 export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
 export const DEFAULT_HERO_INDEX = 1;
+/** Sağ 3/4 varsayılan; sola kaydırınca sol 3/4 ve sol yan. */
 export const DEFAULT_HERO_GALLERY = [
   { id: "front", src: "assets/hero-megane-front.png" },
-  { id: "left-three-quarter", src: "assets/hero-megane.png" },
+  { id: "right-three-quarter", src: "assets/hero-megane.png" },
+  { id: "left-three-quarter", src: "assets/hero-megane-left-q.png" },
   { id: "left-side", src: "assets/hero-megane-side.png" },
   { id: "rear-quarter", src: "assets/hero-megane-rear-q.png" },
   { id: "rear", src: "assets/hero-megane-rear.png" },
 ];
+export const HERO_LEFT_IDS = ["left-three-quarter", "left-side"];
 export const HERO_PLATE = "34 MKB 421";
 export const HINT_KEY = "aob-rotate-hint";
 export const OBD_PILL = {
@@ -166,6 +169,17 @@ export function clampHeroIndex(index, length) {
 
 export function nextHeroIndex(index, length, delta = 1) {
   return clampHeroIndex((Number(index) || 0) + delta, length);
+}
+
+/** Sola kaydırınca gelen galeri id'leri (varsayılan sağ 3/4'ten). */
+export function swipeLeftHeroIds(fromIndex = DEFAULT_HERO_INDEX) {
+  const n = DEFAULT_HERO_GALLERY.length;
+  return [1, 2].map((delta) => DEFAULT_HERO_GALLERY[nextHeroIndex(fromIndex, n, delta)].id);
+}
+
+export function heroVisualIndex(logicalIndex, length) {
+  if (length <= 1) return 0;
+  return clampHeroIndex(logicalIndex, length) + 1;
 }
 
 export function heroImageSrc(vehicle, index = DEFAULT_HERO_INDEX) {

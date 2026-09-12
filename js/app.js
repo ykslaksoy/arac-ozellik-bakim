@@ -27,7 +27,7 @@ import {
   HOME_ACTIONS_TOP,
   TAB_ITEMS,
   clampHeroIndex,
-  heroTrackOffset,
+  heroVisualIndex,
   heroSlides,
   loopedHeroSlides,
   homeMetrics,
@@ -238,7 +238,8 @@ function paintHeroDots(dots, index, length) {
         onClick: () => {
           heroSlideIndex = i;
           const track = dots.parentElement?.querySelector(".hero-track");
-          if (track) setHeroTrack(track, i, length);
+          const stage = dots.parentElement?.querySelector(".hero-stage");
+          if (track) setHeroTrack(track, i, length, { stage });
           paintHeroDots(dots, i, length);
         },
       }),
@@ -246,12 +247,30 @@ function paintHeroDots(dots, index, length) {
   }
 }
 
+function heroStageWidth(stage) {
+  return stage?.clientWidth || 0;
+}
+
+function sizeHeroSlides(stage, track) {
+  const w = heroStageWidth(stage);
+  if (!w) return 0;
+  for (const slide of track.children) {
+    slide.style.flex = `0 0 ${w}px`;
+    slide.style.width = `${w}px`;
+    slide.style.minWidth = `${w}px`;
+  }
+  return w;
+}
+
 function setHeroTrack(track, index, length, options = {}) {
-  const { instant = false, visual } = options;
-  const offset =
-    visual == null ? heroTrackOffset(index, length) : -visual * 100;
+  const { instant = false, visual, stage } = options;
+  const host = stage || track.parentElement;
+  const w = sizeHeroSlides(host, track);
+  const v = visual == null ? heroVisualIndex(index, length) : visual;
   if (instant) track.style.transition = "none";
-  track.style.transform = `translateX(${offset}%)`;
+  track.style.transform = w
+    ? `translate3d(${-v * w}px, 0, 0)`
+    : `translateX(${-v * 100}%)`;
   if (instant) {
     void track.offsetWidth;
     track.style.transition = "";
@@ -263,25 +282,23 @@ function bindHeroCarousel(stage, track, dots, length) {
   let dragging = false;
   let origin = 0;
 
-  const visualOf = (logical) => (length > 1 ? clampHeroIndex(logical, length) + 1 : 0);
-
   const go = (index) => {
     const prev = heroSlideIndex;
     const next = clampHeroIndex(index, length);
     heroSlideIndex = next;
     if (length > 1 && prev === 0 && next === length - 1) {
-      setHeroTrack(track, next, length, { visual: 0 });
+      setHeroTrack(track, next, length, { stage, visual: 0 });
     } else if (length > 1 && prev === length - 1 && next === 0) {
-      setHeroTrack(track, next, length, { visual: length + 1 });
+      setHeroTrack(track, next, length, { stage, visual: length + 1 });
     } else {
-      setHeroTrack(track, next, length);
+      setHeroTrack(track, next, length, { stage });
     }
     paintHeroDots(dots, heroSlideIndex, length);
   };
 
   track.addEventListener("transitionend", (e) => {
     if (e.target !== track || (e.propertyName && e.propertyName !== "transform")) return;
-    setHeroTrack(track, heroSlideIndex, length, { instant: true });
+    setHeroTrack(track, heroSlideIndex, length, { stage, instant: true });
   });
 
   stage.addEventListener("pointerdown", (e) => {
@@ -295,9 +312,9 @@ function bindHeroCarousel(stage, track, dots, length) {
   stage.addEventListener("pointermove", (e) => {
     if (!dragging) return;
     const dx = e.clientX - startX;
-    const width = stage.clientWidth || 1;
-    const visual = visualOf(origin);
-    track.style.transform = `translateX(${-(visual * 100) + (dx / width) * 100}%)`;
+    const w = heroStageWidth(stage) || 1;
+    const visual = heroVisualIndex(origin, length);
+    track.style.transform = `translate3d(${-(visual * w) + dx}px, 0, 0)`;
   });
   const end = (e) => {
     if (!dragging) return;
@@ -315,6 +332,13 @@ function bindHeroCarousel(stage, track, dots, length) {
     if (e.key === "ArrowLeft") go(heroSlideIndex - 1);
     if (e.key === "ArrowRight") go(heroSlideIndex + 1);
   });
+
+  if (typeof ResizeObserver === "function") {
+    const ro = new ResizeObserver(() => {
+      setHeroTrack(track, heroSlideIndex, length, { stage, instant: true });
+    });
+    ro.observe(stage);
+  }
 }
 
 async function readCompressedPhoto(file) {
@@ -352,7 +376,8 @@ function renderHome() {
 
   const track = el("div", { className: "hero-track" });
   for (const src of loopedHeroSlides(slides)) {
-    track.append(
+    const slide = el("div", { className: "hero-slide" });
+    slide.append(
       el("img", {
         className: "hero-photo",
         src,
@@ -360,8 +385,8 @@ function renderHome() {
         draggable: "false",
       }),
     );
+    track.append(slide);
   }
-  setHeroTrack(track, heroSlideIndex, slides.length, { instant: true });
 
   const stage = el("div", {
     className: "hero-stage",
@@ -427,6 +452,7 @@ function renderHome() {
   );
 
   app.append(home);
+  setHeroTrack(track, heroSlideIndex, slides.length, { stage, instant: true });
 }
 
 function renderPlaceholder(title, text) {

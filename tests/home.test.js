@@ -16,12 +16,15 @@ import {
   formatRemainingKm,
   formatWholeTl,
   clampHeroIndex,
+  HERO_LEFT_IDS,
   heroCaptionHidden,
   heroImageSrc,
   heroSlides,
   heroTrackOffset,
+  heroVisualIndex,
   loopedHeroSlides,
   nextHeroIndex,
+  swipeLeftHeroIds,
   homeMetrics,
   homeVehicle,
   maybeSeedDemo,
@@ -66,37 +69,60 @@ test("hero: model/yıl/motor/EDC yazısı yok, varsayılan Megane görseli", () 
   assert.equal(heroImageSrc({}, DEFAULT_HERO_INDEX), DEFAULT_HERO_SRC);
 });
 
-test("hero galeri: 5 açı, kaydırma döngüsü, kullanıcı foto eklenir", () => {
-  assert.equal(DEFAULT_HERO_GALLERY.length, 5);
+test("hero galeri: sağ + sol açılar, sola kaydırma, döngü", () => {
+  assert.ok(DEFAULT_HERO_GALLERY.length >= 5);
   assert.deepEqual(
     DEFAULT_HERO_GALLERY.map((s) => s.id),
-    ["front", "left-three-quarter", "left-side", "rear-quarter", "rear"],
+    [
+      "front",
+      "right-three-quarter",
+      "left-three-quarter",
+      "left-side",
+      "rear-quarter",
+      "rear",
+    ],
   );
+  const srcs = DEFAULT_HERO_GALLERY.map((s) => s.src);
+  assert.equal(new Set(srcs).size, srcs.length);
+  assert.ok(srcs.includes("assets/hero-megane-left-q.png"));
+  assert.ok(srcs.includes("assets/hero-megane-side.png"));
+  assert.deepEqual(HERO_LEFT_IDS, ["left-three-quarter", "left-side"]);
+  assert.deepEqual(swipeLeftHeroIds(DEFAULT_HERO_INDEX), HERO_LEFT_IDS);
+  assert.equal(
+    heroImageSrc({}, nextHeroIndex(DEFAULT_HERO_INDEX, srcs.length, 1)),
+    "assets/hero-megane-left-q.png",
+  );
+  assert.equal(
+    heroImageSrc({}, nextHeroIndex(DEFAULT_HERO_INDEX, srcs.length, 2)),
+    "assets/hero-megane-side.png",
+  );
+
   const builtIn = heroSlides({});
-  assert.equal(builtIn.length, 5);
+  assert.equal(builtIn.length, 6);
   assert.equal(builtIn[0], "assets/hero-megane-front.png");
   assert.equal(builtIn[1], DEFAULT_HERO_SRC);
   assert.ok(builtIn.every((src) => src.startsWith("assets/hero-megane")));
   const looped = loopedHeroSlides(builtIn);
-  assert.equal(looped.length, 7);
-  assert.equal(looped[0], builtIn[4]);
-  assert.equal(looped[6], builtIn[0]);
+  assert.equal(looped.length, 8);
+  assert.equal(looped[0], builtIn[5]);
+  assert.equal(looped[7], builtIn[0]);
   assert.ok(looped.every(Boolean));
-  assert.equal(heroTrackOffset(0, 5), -100);
-  assert.equal(heroTrackOffset(1, 5), -200);
-  assert.equal(heroTrackOffset(4, 5), -500);
-  assert.equal(nextHeroIndex(0, 5, -1), 4);
+  assert.equal(heroVisualIndex(0, 6), 1);
+  assert.equal(heroVisualIndex(1, 6), 2);
+  assert.equal(heroTrackOffset(0, 6), -100);
+  assert.equal(heroTrackOffset(1, 6), -200);
+  assert.equal(nextHeroIndex(0, 6, -1), 5);
 
   const withUser = heroSlides({
     foto: "data:image/jpeg;base64,aa",
     fotos: ["data:image/jpeg;base64,bb"],
   });
-  assert.equal(withUser.length, 7);
-  assert.equal(withUser[5], "data:image/jpeg;base64,aa");
-  assert.equal(withUser[6], "data:image/jpeg;base64,bb");
-  assert.equal(clampHeroIndex(-1, 5), 4);
-  assert.equal(nextHeroIndex(4, 5, 1), 0);
-  assert.equal(heroImageSrc({ foto: "data:image/jpeg;base64,xx" }, 5), "data:image/jpeg;base64,xx");
+  assert.equal(withUser.length, 8);
+  assert.equal(withUser[6], "data:image/jpeg;base64,aa");
+  assert.equal(withUser[7], "data:image/jpeg;base64,bb");
+  assert.equal(clampHeroIndex(-1, 6), 5);
+  assert.equal(nextHeroIndex(5, 6, 1), 0);
+  assert.equal(heroImageSrc({ foto: "data:image/jpeg;base64,xx" }, 6), "data:image/jpeg;base64,xx");
 });
 
 test("OBD pill bağlı değil; halka/overlay yok", () => {
