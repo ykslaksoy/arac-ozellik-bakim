@@ -10,16 +10,19 @@ import {
 
 export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
 export const DEFAULT_HERO_INDEX = 1;
-/** Sağ 3/4 varsayılan; sola kaydırınca sol 3/4 ve sol yan. */
+/** Döner tabla: ön → sağ → arka → sol → başa. Varsayılan ön-sağ 3/4. */
 export const DEFAULT_HERO_GALLERY = [
   { id: "front", src: "assets/hero-megane-front.png" },
   { id: "right-three-quarter", src: "assets/hero-megane.png" },
-  { id: "left-three-quarter", src: "assets/hero-megane-left-q.png" },
-  { id: "left-side", src: "assets/hero-megane-side.png" },
-  { id: "rear-quarter", src: "assets/hero-megane-rear-q.png" },
+  { id: "right-side", src: "assets/hero-megane-right.png" },
+  { id: "rear-right-quarter", src: "assets/hero-megane-rear-right-q.png" },
   { id: "rear", src: "assets/hero-megane-rear.png" },
+  { id: "rear-left-quarter", src: "assets/hero-megane-rear-q.png" },
+  { id: "left-side", src: "assets/hero-megane-side.png" },
+  { id: "left-three-quarter", src: "assets/hero-megane-left-q.png" },
 ];
-export const HERO_LEFT_IDS = ["left-three-quarter", "left-side"];
+export const HERO_LEFT_IDS = ["rear-left-quarter", "left-side", "left-three-quarter"];
+export const HERO_ORBIT_IDS = DEFAULT_HERO_GALLERY.map((slide) => slide.id);
 export const HERO_PLATE = "34 MKB 421";
 export const HINT_KEY = "aob-rotate-hint";
 export const OBD_PILL = {
@@ -171,7 +174,7 @@ export function nextHeroIndex(index, length, delta = 1) {
   return clampHeroIndex((Number(index) || 0) + delta, length);
 }
 
-/** Sola kaydırınca gelen galeri id'leri (varsayılan sağ 3/4'ten). */
+/** Saat yönünde (sola kaydırınca) sonraki galeri id'leri. */
 export function swipeLeftHeroIds(fromIndex = DEFAULT_HERO_INDEX) {
   const n = DEFAULT_HERO_GALLERY.length;
   return [1, 2].map((delta) => DEFAULT_HERO_GALLERY[nextHeroIndex(fromIndex, n, delta)].id);
