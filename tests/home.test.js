@@ -25,7 +25,7 @@ import {
   heroVisualIndex,
   loopedHeroSlides,
   nextHeroIndex,
-  swipeLeftHeroIds,
+  dragRightHeroIds,
   homeMetrics,
   homeVehicle,
   maybeSeedDemo,
@@ -70,7 +70,7 @@ test("hero: model/yıl/motor/EDC yazısı yok, varsayılan Megane görseli", () 
   assert.equal(heroImageSrc({}, DEFAULT_HERO_INDEX), DEFAULT_HERO_SRC);
 });
 
-test("hero galeri: sola swipe saat yönünün tersi", () => {
+test("hero galeri: L→R sürükleme ön-sağ → ön → ön-sol", () => {
   assert.equal(DEFAULT_HERO_INDEX, 0);
   assert.deepEqual(HERO_ORBIT_IDS, [
     "right-three-quarter",
@@ -98,7 +98,7 @@ test("hero galeri: sola swipe saat yönünün tersi", () => {
   const srcs = DEFAULT_HERO_GALLERY.map((s) => s.src);
   assert.equal(new Set(srcs).size, 8);
   assert.ok(HERO_LEFT_IDS.every((id) => HERO_ORBIT_IDS.includes(id)));
-  assert.deepEqual(swipeLeftHeroIds(0), ["front", "left-three-quarter"]);
+  assert.deepEqual(dragRightHeroIds(0), ["front", "left-three-quarter"]);
   assert.equal(nextHeroIndex(0, 8, 1), 1);
   assert.equal(nextHeroIndex(0, 8, -1), 7);
   assert.equal(nextHeroIndex(7, 8, 1), 0);

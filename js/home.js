@@ -10,7 +10,7 @@ import {
 
 export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
 export const DEFAULT_HERO_INDEX = 0;
-/** Sola swipe = saat yönünün tersi: ön-sağ → ön → sol → arka → sağ → başa. */
+/** L→R sürükleyince (arabayı çevirme): ön-sağ → ön → ön-sol → sol → arka-sol → arka → arka-sağ → sağ. */
 export const DEFAULT_HERO_GALLERY = [
   { id: "right-three-quarter", src: "assets/hero-megane.png" },
   { id: "front", src: "assets/hero-megane-front.png" },
@@ -174,8 +174,8 @@ export function nextHeroIndex(index, length, delta = 1) {
   return clampHeroIndex((Number(index) || 0) + delta, length);
 }
 
-/** Sola kaydırınca (saat yönünün tersi) sonraki galeri id'leri. */
-export function swipeLeftHeroIds(fromIndex = DEFAULT_HERO_INDEX) {
+/** Soldan sağa sürükleyince (doğal çevirme) gelen galeri id'leri. */
+export function dragRightHeroIds(fromIndex = DEFAULT_HERO_INDEX) {
   const n = DEFAULT_HERO_GALLERY.length;
   return [1, 2].map((delta) => DEFAULT_HERO_GALLERY[nextHeroIndex(fromIndex, n, delta)].id);
 }

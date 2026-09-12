@@ -314,23 +314,23 @@ function bindHeroCarousel(stage, track, dots, length) {
     const dx = e.clientX - startX;
     const w = heroStageWidth(stage) || 1;
     const visual = heroVisualIndex(origin, length);
-    track.style.transform = `translate3d(${-(visual * w) + dx}px, 0, 0)`;
+    track.style.transform = `translate3d(${-(visual * w) - dx}px, 0, 0)`;
   });
   const end = (e) => {
     if (!dragging) return;
     dragging = false;
     stage.classList.remove("is-dragging");
     const dx = e.clientX - startX;
-    if (dx < -40) go(origin + 1);
-    else if (dx > 40) go(origin - 1);
+    if (dx > 40) go(origin + 1);
+    else if (dx < -40) go(origin - 1);
     else go(origin);
   };
   stage.addEventListener("pointerup", end);
   stage.addEventListener("pointercancel", end);
 
   stage.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft") go(heroSlideIndex + 1);
-    if (e.key === "ArrowRight") go(heroSlideIndex - 1);
+    if (e.key === "ArrowRight") go(heroSlideIndex + 1);
+    if (e.key === "ArrowLeft") go(heroSlideIndex - 1);
   });
 
   if (typeof ResizeObserver === "function") {
