@@ -9,17 +9,17 @@ import {
 } from "./logic.js";
 
 export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
-export const DEFAULT_HERO_INDEX = 1;
-/** Döner tabla: ön → sağ → arka → sol → başa. Varsayılan ön-sağ 3/4. */
+export const DEFAULT_HERO_INDEX = 0;
+/** Saat yönü (yukarıdan): ön-sağ → sağ → arka → sol → ön → başa. */
 export const DEFAULT_HERO_GALLERY = [
-  { id: "front", src: "assets/hero-megane-front.png" },
   { id: "right-three-quarter", src: "assets/hero-megane.png" },
   { id: "right-side", src: "assets/hero-megane-right.png" },
   { id: "rear-right-quarter", src: "assets/hero-megane-rear-right-q.png" },
   { id: "rear", src: "assets/hero-megane-rear.png" },
-  { id: "rear-left-quarter", src: "assets/hero-megane-rear-q.png" },
-  { id: "left-side", src: "assets/hero-megane-side.png" },
+  { id: "rear-left-quarter", src: "assets/hero-megane-rear-left-q.png" },
+  { id: "left-side", src: "assets/hero-megane-left.png" },
   { id: "left-three-quarter", src: "assets/hero-megane-left-q.png" },
+  { id: "front", src: "assets/hero-megane-front.png" },
 ];
 export const HERO_LEFT_IDS = ["rear-left-quarter", "left-side", "left-three-quarter"];
 export const HERO_ORBIT_IDS = DEFAULT_HERO_GALLERY.map((slide) => slide.id);

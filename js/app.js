@@ -329,8 +329,8 @@ function bindHeroCarousel(stage, track, dots, length) {
   stage.addEventListener("pointercancel", end);
 
   stage.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft") go(heroSlideIndex - 1);
-    if (e.key === "ArrowRight") go(heroSlideIndex + 1);
+    if (e.key === "ArrowLeft") go(heroSlideIndex + 1);
+    if (e.key === "ArrowRight") go(heroSlideIndex - 1);
   });
 
   if (typeof ResizeObserver === "function") {
