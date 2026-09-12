@@ -27,7 +27,9 @@ import {
   HOME_ACTIONS_TOP,
   TAB_ITEMS,
   clampHeroIndex,
+  heroTrackOffset,
   heroSlides,
+  loopedHeroSlides,
   homeMetrics,
   homeVehicle,
   iconSvg,
@@ -244,9 +246,16 @@ function paintHeroDots(dots, index, length) {
   }
 }
 
-function setHeroTrack(track, index, length) {
-  const i = clampHeroIndex(index, length);
-  track.style.transform = `translateX(${-i * 100}%)`;
+function setHeroTrack(track, index, length, options = {}) {
+  const { instant = false, visual } = options;
+  const offset =
+    visual == null ? heroTrackOffset(index, length) : -visual * 100;
+  if (instant) track.style.transition = "none";
+  track.style.transform = `translateX(${offset}%)`;
+  if (instant) {
+    void track.offsetWidth;
+    track.style.transition = "";
+  }
 }
 
 function bindHeroCarousel(stage, track, dots, length) {
@@ -254,11 +263,26 @@ function bindHeroCarousel(stage, track, dots, length) {
   let dragging = false;
   let origin = 0;
 
+  const visualOf = (logical) => (length > 1 ? clampHeroIndex(logical, length) + 1 : 0);
+
   const go = (index) => {
-    heroSlideIndex = clampHeroIndex(index, length);
-    setHeroTrack(track, heroSlideIndex, length);
+    const prev = heroSlideIndex;
+    const next = clampHeroIndex(index, length);
+    heroSlideIndex = next;
+    if (length > 1 && prev === 0 && next === length - 1) {
+      setHeroTrack(track, next, length, { visual: 0 });
+    } else if (length > 1 && prev === length - 1 && next === 0) {
+      setHeroTrack(track, next, length, { visual: length + 1 });
+    } else {
+      setHeroTrack(track, next, length);
+    }
     paintHeroDots(dots, heroSlideIndex, length);
   };
+
+  track.addEventListener("transitionend", (e) => {
+    if (e.target !== track || (e.propertyName && e.propertyName !== "transform")) return;
+    setHeroTrack(track, heroSlideIndex, length, { instant: true });
+  });
 
   stage.addEventListener("pointerdown", (e) => {
     if (e.target.closest(".foto-chip, .hero-dots")) return;
@@ -272,7 +296,8 @@ function bindHeroCarousel(stage, track, dots, length) {
     if (!dragging) return;
     const dx = e.clientX - startX;
     const width = stage.clientWidth || 1;
-    track.style.transform = `translateX(${-(origin * 100) + (dx / width) * 100}%)`;
+    const visual = visualOf(origin);
+    track.style.transform = `translateX(${-(visual * 100) + (dx / width) * 100}%)`;
   });
   const end = (e) => {
     if (!dragging) return;
@@ -326,7 +351,7 @@ function renderHome() {
   heroSlideIndex = clampHeroIndex(heroSlideIndex, slides.length);
 
   const track = el("div", { className: "hero-track" });
-  for (const src of slides) {
+  for (const src of loopedHeroSlides(slides)) {
     track.append(
       el("img", {
         className: "hero-photo",
@@ -336,7 +361,7 @@ function renderHome() {
       }),
     );
   }
-  setHeroTrack(track, heroSlideIndex, slides.length);
+  setHeroTrack(track, heroSlideIndex, slides.length, { instant: true });
 
   const stage = el("div", {
     className: "hero-stage",

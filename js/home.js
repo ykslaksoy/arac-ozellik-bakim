@@ -12,8 +12,8 @@ export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
 export const DEFAULT_HERO_INDEX = 1;
 export const DEFAULT_HERO_GALLERY = [
   { id: "front", src: "assets/hero-megane-front.png" },
-  { id: "three-quarter", src: "assets/hero-megane.png" },
-  { id: "side", src: "assets/hero-megane-side.png" },
+  { id: "left-three-quarter", src: "assets/hero-megane.png" },
+  { id: "left-side", src: "assets/hero-megane-side.png" },
   { id: "rear-quarter", src: "assets/hero-megane-rear-q.png" },
   { id: "rear", src: "assets/hero-megane-rear.png" },
 ];
@@ -143,6 +143,18 @@ export function userHeroPhotos(vehicle) {
 
 export function heroSlides(vehicle) {
   return [...DEFAULT_HERO_GALLERY.map((slide) => slide.src), ...userHeroPhotos(vehicle)];
+}
+
+/** First/last clones so wrap-around never shows an empty frame. */
+export function loopedHeroSlides(slides) {
+  if (!slides.length) return [];
+  if (slides.length === 1) return [slides[0]];
+  return [slides[slides.length - 1], ...slides, slides[0]];
+}
+
+export function heroTrackOffset(logicalIndex, length) {
+  if (length <= 1) return 0;
+  return -(clampHeroIndex(logicalIndex, length) + 1) * 100;
 }
 
 export function clampHeroIndex(index, length) {

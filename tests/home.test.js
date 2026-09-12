@@ -19,6 +19,8 @@ import {
   heroCaptionHidden,
   heroImageSrc,
   heroSlides,
+  heroTrackOffset,
+  loopedHeroSlides,
   nextHeroIndex,
   homeMetrics,
   homeVehicle,
@@ -68,13 +70,22 @@ test("hero galeri: 5 açı, kaydırma döngüsü, kullanıcı foto eklenir", () 
   assert.equal(DEFAULT_HERO_GALLERY.length, 5);
   assert.deepEqual(
     DEFAULT_HERO_GALLERY.map((s) => s.id),
-    ["front", "three-quarter", "side", "rear-quarter", "rear"],
+    ["front", "left-three-quarter", "left-side", "rear-quarter", "rear"],
   );
   const builtIn = heroSlides({});
   assert.equal(builtIn.length, 5);
   assert.equal(builtIn[0], "assets/hero-megane-front.png");
   assert.equal(builtIn[1], DEFAULT_HERO_SRC);
   assert.ok(builtIn.every((src) => src.startsWith("assets/hero-megane")));
+  const looped = loopedHeroSlides(builtIn);
+  assert.equal(looped.length, 7);
+  assert.equal(looped[0], builtIn[4]);
+  assert.equal(looped[6], builtIn[0]);
+  assert.ok(looped.every(Boolean));
+  assert.equal(heroTrackOffset(0, 5), -100);
+  assert.equal(heroTrackOffset(1, 5), -200);
+  assert.equal(heroTrackOffset(4, 5), -500);
+  assert.equal(nextHeroIndex(0, 5, -1), 4);
 
   const withUser = heroSlides({
     foto: "data:image/jpeg;base64,aa",

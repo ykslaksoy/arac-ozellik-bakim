@@ -210,6 +210,7 @@ body {
   height: 13.25rem;
   object-fit: contain;
   object-position: center 48%;
+  background: #fff;
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
