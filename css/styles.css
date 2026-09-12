@@ -102,7 +102,10 @@ body {
 }
 
 .main.page-home {
-  padding-bottom: 0.15rem;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .main:not(.page-home) {
@@ -115,7 +118,7 @@ body {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: end;
   gap: 0.1rem;
-  padding: 0.45rem 0.2rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.55rem 0.2rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
   background: #fff;
   border-top: 1px solid rgba(21, 32, 40, 0.06);
 }
@@ -160,48 +163,63 @@ body {
 }
 
 .home {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.95rem;
-  padding: 0.15rem 0 0.85rem;
+  gap: 0.7rem;
+  padding: 0.12rem 0 0.55rem;
 }
 
 .hero-card {
   margin: 0 0.85rem;
   background: #fff;
-  border-radius: 22px;
+  border-radius: 20px;
   position: relative;
   overflow: hidden;
-  min-height: 17.2rem;
+  flex: 0 0 auto;
 }
 
 .hero-stage {
-  perspective: 900px;
-  padding: 0.1rem 0 1.35rem;
   overflow: hidden;
-}
-
-.hero-rig {
-  transform-style: preserve-3d;
-  transition: transform 80ms linear;
-  touch-action: pan-y;
+  padding: 0.05rem 0 1.15rem;
   cursor: grab;
+  touch-action: pan-y;
+  outline: none;
 }
 
-.hero-rig.is-dragging {
+.hero-stage.is-dragging {
   cursor: grabbing;
+}
+
+.hero-stage.is-dragging .hero-track {
   transition: none;
+}
+
+.hero-track {
+  display: flex;
+  width: 100%;
+  transition: transform 220ms ease;
+  will-change: transform;
+}
+
+.hero-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
 }
 
 .hero-photo {
   display: block;
-  width: 118%;
-  height: 16.6rem;
-  margin-left: -9%;
-  object-fit: cover;
-  object-position: center 46%;
+  width: 100%;
+  height: 13.25rem;
+  object-fit: contain;
+  object-position: center 48%;
+  background: #fff;
   user-select: none;
   -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 .hero-dots {
@@ -210,16 +228,20 @@ body {
   bottom: 0.85rem;
   display: flex;
   gap: 0.32rem;
+  z-index: 1;
 }
 
-.hero-dots span {
+.hero-dot {
   width: 0.38rem;
   height: 0.38rem;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   background: #d6dde1;
+  cursor: pointer;
 }
 
-.hero-dots span.active {
+.hero-dot.active {
   background: var(--accent);
 }
 
@@ -256,12 +278,13 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 0.7rem;
-  padding: 0.72rem 0.8rem;
+  padding: 0.58rem 0.75rem;
   border-radius: 16px;
   background: #eef7f5;
   color: var(--ink-soft);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
+  flex: 0 0 auto;
 }
 
 .home-hint p {
@@ -296,9 +319,12 @@ body {
   margin: 0 0.85rem;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: center;
   background: #fff;
   border-radius: 20px;
-  padding: 1.15rem 0.2rem 0.95rem;
+  padding: 1.05rem 0.2rem 0.95rem;
+  flex: 1 1 0;
+  min-height: 5.4rem;
 }
 
 .action-row a {
@@ -314,8 +340,8 @@ body {
 }
 
 .action-ico {
-  width: 2.15rem;
-  height: 2.15rem;
+  width: 2.35rem;
+  height: 2.35rem;
   color: var(--accent);
 }
 
@@ -328,9 +354,12 @@ body {
   margin: 0 0.85rem;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: center;
   background: #fff;
   border-radius: 20px;
-  padding: 0.95rem 0.35rem 0.85rem;
+  padding: 1.05rem 0.4rem 1rem;
+  flex: 0.85 1 0;
+  min-height: 4.8rem;
 }
 
 .metric {

@@ -9,6 +9,20 @@ import {
 } from "./logic.js";
 
 export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
+export const DEFAULT_HERO_INDEX = 0;
+/** L→R sürükleyince (arabayı çevirme): ön-sağ → ön → ön-sol → sol → arka-sol → arka → arka-sağ → sağ. */
+export const DEFAULT_HERO_GALLERY = [
+  { id: "right-three-quarter", src: "assets/hero-megane.png" },
+  { id: "front", src: "assets/hero-megane-front.png" },
+  { id: "left-three-quarter", src: "assets/hero-megane-left-q.png" },
+  { id: "left-side", src: "assets/hero-megane-left.png" },
+  { id: "rear-left-quarter", src: "assets/hero-megane-rear-left-q.png" },
+  { id: "rear", src: "assets/hero-megane-rear.png" },
+  { id: "rear-right-quarter", src: "assets/hero-megane-rear-right-q.png" },
+  { id: "right-side", src: "assets/hero-megane-right.png" },
+];
+export const HERO_LEFT_IDS = ["rear-left-quarter", "left-side", "left-three-quarter"];
+export const HERO_ORBIT_IDS = DEFAULT_HERO_GALLERY.map((slide) => slide.id);
 export const HERO_PLATE = "34 MKB 421";
 export const HINT_KEY = "aob-rotate-hint";
 export const OBD_PILL = {
@@ -122,9 +136,59 @@ export function maybeSeedDemo(state, persistFn) {
   return state;
 }
 
-export function heroImageSrc(vehicle) {
-  if (vehicle?.foto) return vehicle.foto;
-  return DEFAULT_HERO_SRC;
+export function userHeroPhotos(vehicle) {
+  const extras = [];
+  if (vehicle?.foto) extras.push(vehicle.foto);
+  if (Array.isArray(vehicle?.fotos)) {
+    for (const src of vehicle.fotos) {
+      if (src) extras.push(src);
+    }
+  }
+  return [...new Set(extras)];
+}
+
+export function heroSlides(vehicle) {
+  return [...DEFAULT_HERO_GALLERY.map((slide) => slide.src), ...userHeroPhotos(vehicle)];
+}
+
+/** First/last clones so wrap-around never shows an empty frame. */
+export function loopedHeroSlides(slides) {
+  if (!slides.length) return [];
+  if (slides.length === 1) return [slides[0]];
+  return [slides[slides.length - 1], ...slides, slides[0]];
+}
+
+export function heroTrackOffset(logicalIndex, length) {
+  if (length <= 1) return 0;
+  return -(clampHeroIndex(logicalIndex, length) + 1) * 100;
+}
+
+export function clampHeroIndex(index, length) {
+  if (!length) return 0;
+  const n = Number(index);
+  if (!Number.isFinite(n)) return 0;
+  return ((Math.trunc(n) % length) + length) % length;
+}
+
+export function nextHeroIndex(index, length, delta = 1) {
+  return clampHeroIndex((Number(index) || 0) + delta, length);
+}
+
+/** Soldan sağa sürükleyince (doğal çevirme) gelen galeri id'leri. */
+export function dragRightHeroIds(fromIndex = DEFAULT_HERO_INDEX) {
+  const n = DEFAULT_HERO_GALLERY.length;
+  return [1, 2].map((delta) => DEFAULT_HERO_GALLERY[nextHeroIndex(fromIndex, n, delta)].id);
+}
+
+export function heroVisualIndex(logicalIndex, length) {
+  if (length <= 1) return 0;
+  return clampHeroIndex(logicalIndex, length) + 1;
+}
+
+export function heroImageSrc(vehicle, index = DEFAULT_HERO_INDEX) {
+  const slides = heroSlides(vehicle);
+  if (!slides.length) return DEFAULT_HERO_SRC;
+  return slides[clampHeroIndex(index, slides.length)];
 }
 
 /** Hero üzerinde model / yıl / motor / EDC yazılmaz. */
