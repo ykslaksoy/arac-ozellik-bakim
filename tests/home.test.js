@@ -70,42 +70,43 @@ test("hero: model/yıl/motor/EDC yazısı yok, varsayılan Megane görseli", () 
   assert.equal(heroImageSrc({}, DEFAULT_HERO_INDEX), DEFAULT_HERO_SRC);
 });
 
-test("hero galeri: saat yönü dizi, sola swipe +1", () => {
+test("hero galeri: sola swipe saat yönünün tersi", () => {
   assert.equal(DEFAULT_HERO_INDEX, 0);
   assert.deepEqual(HERO_ORBIT_IDS, [
     "right-three-quarter",
-    "right-side",
-    "rear-right-quarter",
-    "rear",
-    "rear-left-quarter",
-    "left-side",
-    "left-three-quarter",
     "front",
+    "left-three-quarter",
+    "left-side",
+    "rear-left-quarter",
+    "rear",
+    "rear-right-quarter",
+    "right-side",
   ]);
   assert.deepEqual(
     DEFAULT_HERO_GALLERY.map((s) => s.src),
     [
       "assets/hero-megane.png",
-      "assets/hero-megane-right.png",
-      "assets/hero-megane-rear-right-q.png",
-      "assets/hero-megane-rear.png",
-      "assets/hero-megane-rear-left-q.png",
-      "assets/hero-megane-left.png",
-      "assets/hero-megane-left-q.png",
       "assets/hero-megane-front.png",
+      "assets/hero-megane-left-q.png",
+      "assets/hero-megane-left.png",
+      "assets/hero-megane-rear-left-q.png",
+      "assets/hero-megane-rear.png",
+      "assets/hero-megane-rear-right-q.png",
+      "assets/hero-megane-right.png",
     ],
   );
   const srcs = DEFAULT_HERO_GALLERY.map((s) => s.src);
   assert.equal(new Set(srcs).size, 8);
   assert.ok(HERO_LEFT_IDS.every((id) => HERO_ORBIT_IDS.includes(id)));
-  assert.deepEqual(swipeLeftHeroIds(0), ["right-side", "rear-right-quarter"]);
+  assert.deepEqual(swipeLeftHeroIds(0), ["front", "left-three-quarter"]);
   assert.equal(nextHeroIndex(0, 8, 1), 1);
   assert.equal(nextHeroIndex(0, 8, -1), 7);
   assert.equal(nextHeroIndex(7, 8, 1), 0);
   assert.equal(DEFAULT_HERO_GALLERY[0].src, DEFAULT_HERO_SRC);
-  assert.equal(DEFAULT_HERO_GALLERY[5].id, "left-side");
-  assert.equal(DEFAULT_HERO_GALLERY[6].id, "left-three-quarter");
-  assert.equal(DEFAULT_HERO_GALLERY[7].id, "front");
+  assert.equal(DEFAULT_HERO_GALLERY[1].id, "front");
+  assert.equal(DEFAULT_HERO_GALLERY[2].id, "left-three-quarter");
+  assert.equal(DEFAULT_HERO_GALLERY[3].id, "left-side");
+  assert.equal(DEFAULT_HERO_GALLERY[7].id, "right-side");
 
   const builtIn = heroSlides({});
   assert.equal(builtIn.length, 8);
