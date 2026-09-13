@@ -1,23 +1,21 @@
-# Dragon
+# Pin: Dragon
 
-- Klasör (PC): `Documents\projeler\dragon`
+- Cursor pin: **Dragon**
+- Takip klasörü: `uygulamalar/dragon`
+- PC: `Documents\projeler\dragon`
 - GitHub: https://github.com/ykslaksoy/dragon
 - Canlı: https://dragon-yuksel2.vercel.app
-- Cursor Workspace: **`dragon`**
+- Workspace: **`dragon`**
 
-## Ne bu
+## Şu an
 
-Dragon sayfası. Next.js App Router başlangıcı.
+Next.js App Router iskeleti duruyor.
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Şu an
-
-Repo dolu (Next.js iskelet). Cursor pinned: Dragon.
-
 ## Sonraki
 
-Bu sohbetten değil, Workspace = `dragon` olan ayrı agent ile devam et.
+Create Project → Workspace `dragon`. Dragon Studio ile karıştırma.

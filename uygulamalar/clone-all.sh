@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
-# Tüm uygulama repolarını ~/Documents/projeler altına klonlar.
+# Cursor pin’lerinin GitHub’da duranlarını klonlar.
 set -euo pipefail
 root="${HOME}/Documents/projeler"
 mkdir -p "$root"
 cd "$root"
 
-for name in arac-ozellik-bakim dragon sofra-qr-menu; do
-  if [ -d "$name" ]; then
-    echo "Var, atlandı: $name"
-    continue
-  fi
-  git clone "https://github.com/ykslaksoy/${name}.git"
-done
+if [ ! -d qrmenu ]; then
+  git clone "https://github.com/ykslaksoy/sofra-qr-menu.git" qrmenu
+else
+  echo "Var, atlandı: qrmenu"
+fi
+
+if [ ! -d dragon ]; then
+  git clone "https://github.com/ykslaksoy/dragon.git" dragon
+else
+  echo "Var, atlandı: dragon"
+fi
 
 echo
-echo "GitHub’da henüz olmayanlar (elle New repository sonrası clone):"
-echo "  kuran-hafizlik, dragon-studio, aricilik-egitim, desktop-tutorial, megane-3-ayna-sensor"
+echo "GitHub’da henüz olmayan pinler (New repository sonrası clone):"
+echo "  Kur’an Hafızlık Yolu  ->  kuran-hafizlik-yolu"
+echo "  Dragon Studio         ->  dragon-studio"
+echo "  SuperAri              ->  superari"
 echo "Klasör: $root"

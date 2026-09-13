@@ -1,45 +1,32 @@
-# Uygulamalar — tek yerden takip
+# Cursor pin’leri — takip klasörleri
 
-Her uygulamanın **kendi klasörü** burada. Durum, GitHub, canlı site ve sonraki adım o klasördeki `DURUM.md` içinde.
+Cursor’da **Pinned** olarak eklediklerin, burada ayrı takip klasörü. Her pin = bir klasör; durum `DURUM.md` içinde.
 
-PC’de kod klasörleri ayrı durur (`Documents\projeler\...`). Bu dizin yalnızca **indeks / takip**.
+| Pin (Cursor) | Klasör | GitHub | Canlı |
+|--------------|--------|--------|--------|
+| Kur’an Hafızlık Yolu | [kuran-hafizlik-yolu](kuran-hafizlik-yolu/DURUM.md) | henüz yok | — |
+| QrMenü | [qrmenu](qrmenu/DURUM.md) | [sofra-qr-menu](https://github.com/ykslaksoy/sofra-qr-menu) | https://sofra-qr-menu-livid.vercel.app |
+| Dragon | [dragon](dragon/DURUM.md) | [dragon](https://github.com/ykslaksoy/dragon) | https://dragon-yuksel2.vercel.app |
+| Dragon Studio | [dragon-studio](dragon-studio/DURUM.md) | henüz yok | — |
+| SuperAri | [superari](superari/DURUM.md) | henüz yok (`aricilik-egitim`) | — |
 
-## Klasörler
+SüperAraç bu listede pin değil; kendi reposu: https://github.com/ykslaksoy/arac-ozellik-bakim
 
-| Klasör | Uygulama | GitHub | Canlı |
-|--------|----------|--------|--------|
-| [arac-ozellik-bakim](arac-ozellik-bakim/DURUM.md) | SüperAraç | [var](https://github.com/ykslaksoy/arac-ozellik-bakim) | https://superarac.vercel.app |
-| [dragon](dragon/DURUM.md) | Dragon | [var](https://github.com/ykslaksoy/dragon) | https://dragon-yuksel2.vercel.app |
-| [sofra-qr-menu](sofra-qr-menu/DURUM.md) | QrMenü / Sofra | [var](https://github.com/ykslaksoy/sofra-qr-menu) | https://sofra-qr-menu-livid.vercel.app |
-| [kuran-hafizlik](kuran-hafizlik/DURUM.md) | Kur’an Hafızlık Yolu | Cursor’da var, GitHub’da yok | — |
-| [dragon-studio](dragon-studio/DURUM.md) | Dragon Studio | Cursor’da var, GitHub’da yok | — |
-| [aricilik-egitim](aricilik-egitim/DURUM.md) | SüperArı | Cursor’da var, GitHub’da yok | — |
-| [desktop-tutorial](desktop-tutorial/DURUM.md) | Masaüstü alıştırması | Cursor’da var, GitHub’da yok | — |
-| [megane-3-ayna-sensor](megane-3-ayna-sensor/DURUM.md) | Megane 3 ayna sensör | Repo yok | — |
-
-## Cursor’da nasıl açılır
-
-**Create Project** GitHub’da yeni repo açmaz. Agent sohbetini bir Workspace’e bağlar.
+## Cursor’da pin’i açmak
 
 1. **Start from scratch** seçme
-2. Workspace’ten **o uygulamanın reposunu** seç (SüperAraç → `arac-ozellik-bakim`)
-3. Tüm uygulamaları bir sohbette görmek için **Select Multiple** aç, listeden hepsini işaretle
-4. **Create Project**
+2. Workspace = o pin’in reposu (QrMenü → `sofra-qr-menu`, Dragon → `dragon`)
+3. GitHub’u olmayan pin (Hafızlık, Dragon Studio, SuperAri): GitHub’da **New repository** aç, sonra Workspace’ten o repoyu seç
 
-GitHub’da henüz olmayanlar (Hafızlık, Dragon Studio, SüperArı, tutorial, ayna sensör) dropdown’da görünse bile agent kaydedemez. GitHub’da aynı isimle **New repository** açıp Cursor’da o repoyu seç.
-
-## PC klasörleri (önerilen)
+## PC
 
 ```
 Documents\projeler\
-  arac-ozellik-bakim\
+  kuran-hafizlik-yolu\
+  qrmenu\          → clone sofra-qr-menu
   dragon\
-  sofra-qr-menu\
-  kuran-hafizlik\
   dragon-studio\
-  aricilik-egitim\
-  desktop-tutorial\
-  megane-3-ayna-sensor\
+  superari\
 ```
 
-Hazır komut: [clone-all.ps1](clone-all.ps1) (Windows) veya [clone-all.sh](clone-all.sh).
+[clone-all.ps1](clone-all.ps1) / [clone-all.sh](clone-all.sh) yalnızca GitHub’da duranları klonlar (Dragon + QrMenü).

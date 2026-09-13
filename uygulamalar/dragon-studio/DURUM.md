@@ -1,15 +1,17 @@
-# Dragon Studio
+# Pin: Dragon Studio
 
-- Klasör (PC): `Documents\projeler\dragon-studio`
+- Cursor pin: **Dragon Studio**
+- Takip klasörü: `uygulamalar/dragon-studio`
+- PC: `Documents\projeler\dragon-studio`
 - GitHub: yok
 - Canlı: —
-- Cursor Workspace: **`dragon-studio`** (Dragon uygulamasından ayrı)
+- Workspace: **`dragon-studio`** (pin **Dragon** / repo `dragon` değil)
 
 ## Şu an
 
-Cursor listesinde var. `dragon` reposu ayrı (Next.js sayfa). Studio’nun kendi GitHub’u yok.
+Cursor pin var. GitHub reposu yok. Dragon sayfası ayrı.
 
 ## Sonraki
 
-1. GitHub → **New repository** → `dragon-studio`
-2. Cursor Workspace: `dragon-studio` ( `dragon` ile karıştırma)
+1. GitHub → New repository → `dragon-studio`
+2. Cursor Workspace: `dragon-studio`

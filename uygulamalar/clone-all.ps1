@@ -1,24 +1,21 @@
-# Tüm uygulama repolarını Documents\projeler altına klonlar.
+# Cursor pin’lerinin GitHub’da duranlarını klonlar.
 $root = Join-Path $env:USERPROFILE "Documents\projeler"
 New-Item -ItemType Directory -Force -Path $root | Out-Null
 Set-Location $root
 
-$repos = @(
-  "arac-ozellik-bakim",
-  "dragon",
-  "sofra-qr-menu"
-)
+# Pin QrMenü → repo sofra-qr-menu
+if (-not (Test-Path "qrmenu")) {
+  git clone "https://github.com/ykslaksoy/sofra-qr-menu.git" "qrmenu"
+} else { Write-Host "Var, atlandi: qrmenu" }
 
-foreach ($name in $repos) {
-  if (Test-Path $name) {
-    Write-Host "Var, atlandi: $name"
-    continue
-  }
-  git clone "https://github.com/ykslaksoy/$name.git"
-}
+# Pin Dragon → repo dragon
+if (-not (Test-Path "dragon")) {
+  git clone "https://github.com/ykslaksoy/dragon.git" "dragon"
+} else { Write-Host "Var, atlandi: dragon" }
 
 Write-Host ""
-Write-Host "GitHub'da henuz olmayanlar (elle New repository sonrasi clone):"
-Write-Host "  kuran-hafizlik, dragon-studio, aricilik-egitim, desktop-tutorial, megane-3-ayna-sensor"
+Write-Host "GitHub'da henuz olmayan pinler (New repository sonrasi clone):"
+Write-Host "  Kur'an Hafizlik Yolu  ->  kuran-hafizlik-yolu"
+Write-Host "  Dragon Studio         ->  dragon-studio"
+Write-Host "  SuperAri              ->  superari"
 Write-Host "Klasor: $root"
-Write-Host "Cursor: File -> Open Folder ile bu klasoru veya icindeki tek bir uygulamayi ac."
