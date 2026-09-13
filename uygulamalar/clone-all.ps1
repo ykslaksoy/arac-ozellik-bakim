@@ -1,11 +1,12 @@
-# Cursor pin’lerinin GitHub’da duranlarını klonlar.
+# Mevcut GitHub repolarını klonlar. SüperAraç reposu zaten var: arac-ozellik-bakim.
 $root = Join-Path $env:USERPROFILE "Documents\projeler"
 New-Item -ItemType Directory -Force -Path $root | Out-Null
 Set-Location $root
 
-if (-not (Test-Path "superarac")) {
-  git clone "https://github.com/ykslaksoy/arac-ozellik-bakim.git" "superarac"
-} else { Write-Host "Var, atlandi: superarac" }
+# Pin SüperAraç → mevcut repo (yeniden adlandırma yok)
+if (-not (Test-Path "arac-ozellik-bakim")) {
+  git clone "https://github.com/ykslaksoy/arac-ozellik-bakim.git" "arac-ozellik-bakim"
+} else { Write-Host "Var (mevcut repo), atlandi: arac-ozellik-bakim" }
 
 if (-not (Test-Path "qrmenu")) {
   git clone "https://github.com/ykslaksoy/sofra-qr-menu.git" "qrmenu"

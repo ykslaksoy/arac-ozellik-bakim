@@ -1,10 +1,10 @@
 # Cursor pin’leri — takip klasörleri
 
-Cursor’da **Pinned** uygulamalar. Her pin = bir klasör; durum `DURUM.md` içinde.
+Her pin = bir klasör. **SüperAraç reposu zaten var** (`arac-ozellik-bakim`); yeni repo açılmaz.
 
 | Pin (Cursor) | Klasör | GitHub | Canlı |
 |--------------|--------|--------|--------|
-| SüperAraç | [superarac](superarac/DURUM.md) | [arac-ozellik-bakim](https://github.com/ykslaksoy/arac-ozellik-bakim) | https://superarac.vercel.app |
+| SüperAraç | [arac-ozellik-bakim](arac-ozellik-bakim/DURUM.md) | **mevcut** [arac-ozellik-bakim](https://github.com/ykslaksoy/arac-ozellik-bakim) | https://superarac.vercel.app |
 | Süper Kuzu | [superkuzu](superkuzu/DURUM.md) | henüz yok | — |
 | SuperAri | [superari](superari/DURUM.md) | henüz yok (`aricilik-egitim`) | — |
 | Kur’an Hafızlık Yolu | [kuran-hafizlik-yolu](kuran-hafizlik-yolu/DURUM.md) | henüz yok | — |
@@ -15,20 +15,22 @@ Cursor’da **Pinned** uygulamalar. Her pin = bir klasör; durum `DURUM.md` içi
 ## Cursor’da pin’i açmak
 
 1. **Start from scratch** seçme
-2. Workspace = o pin’in reposu (SüperAraç → `arac-ozellik-bakim`, QrMenü → `sofra-qr-menu`, Dragon → `dragon`)
-3. GitHub’u olmayan pin (Süper Kuzu, SuperAri, Hafızlık, Dragon Studio): GitHub’da **New repository** aç, sonra Workspace’ten o repoyu seç
+2. SüperAraç → Workspace **`arac-ozellik-bakim`** (bu repo)
+3. QrMenü → `sofra-qr-menu` · Dragon → `dragon`
+4. GitHub’u olmayanlar (Süper Kuzu, SuperAri, Hafızlık, Dragon Studio): **New repository**, sonra Workspace’ten seç
 
 ## PC
 
+SüperAraç için ikinci klasör açma. Mevcut clone:
+
 ```
-Documents\projeler\
-  superarac\       → clone arac-ozellik-bakim
-  superkuzu\
-  superari\
-  kuran-hafizlik-yolu\
-  qrmenu\          → clone sofra-qr-menu
-  dragon\
-  dragon-studio\
+Documents\projeler\arac-ozellik-bakim   ← zaten bu repo
+Documents\projeler\qrmenu               ← sofra-qr-menu
+Documents\projeler\dragon
+Documents\projeler\superkuzu            ← repo yok, sonra
+Documents\projeler\superari
+Documents\projeler\kuran-hafizlik-yolu
+Documents\projeler\dragon-studio
 ```
 
-[clone-all.ps1](clone-all.ps1) / [clone-all.sh](clone-all.sh) GitHub’da duranları klonlar.
+[clone-all.ps1](clone-all.ps1) / [clone-all.sh](clone-all.sh) — `arac-ozellik-bakim` klasörü varsa SüperAraç’ı tekrar klonlamaz.

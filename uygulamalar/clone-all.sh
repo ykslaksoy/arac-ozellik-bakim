@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Cursor pin’lerinin GitHub’da duranlarını klonlar.
+# Mevcut GitHub repolarını klonlar. SüperAraç reposu zaten var: arac-ozellik-bakim.
 set -euo pipefail
 root="${HOME}/Documents/projeler"
 mkdir -p "$root"
 cd "$root"
 
-if [ ! -d superarac ]; then
-  git clone "https://github.com/ykslaksoy/arac-ozellik-bakim.git" superarac
+if [ ! -d arac-ozellik-bakim ]; then
+  git clone "https://github.com/ykslaksoy/arac-ozellik-bakim.git" arac-ozellik-bakim
 else
-  echo "Var, atlandı: superarac"
+  echo "Var (mevcut repo), atlandı: arac-ozellik-bakim"
 fi
 
 if [ ! -d qrmenu ]; then
