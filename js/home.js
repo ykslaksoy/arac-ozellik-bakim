@@ -9,6 +9,22 @@ import {
 } from "./logic.js";
 
 export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
+/** Repodaki doğru Megane yılı (facelift Phase 2 / kullanıcı onayı). */
+export const DEMO_MEGANE_YEAR = "2012";
+export const DEFAULT_HERO_INDEX = 0;
+/** L→R sürükleyince (arabayı çevirme): ön-sağ → ön → ön-sol → sol → arka-sol → arka → arka-sağ → sağ. */
+export const DEFAULT_HERO_GALLERY = [
+  { id: "right-three-quarter", src: "assets/hero-megane.png" },
+  { id: "front", src: "assets/hero-megane-front.png" },
+  { id: "left-three-quarter", src: "assets/hero-megane-left-q.png" },
+  { id: "left-side", src: "assets/hero-megane-left.png" },
+  { id: "rear-left-quarter", src: "assets/hero-megane-rear-left-q.png" },
+  { id: "rear", src: "assets/hero-megane-rear.png" },
+  { id: "rear-right-quarter", src: "assets/hero-megane-rear-right-q.png" },
+  { id: "right-side", src: "assets/hero-megane-right.png" },
+];
+export const HERO_LEFT_IDS = ["rear-left-quarter", "left-side", "left-three-quarter"];
+export const HERO_ORBIT_IDS = DEFAULT_HERO_GALLERY.map((slide) => slide.id);
 export const HERO_PLATE = "34 MKB 421";
 export const HINT_KEY = "aob-rotate-hint";
 export const OBD_PILL = {
@@ -49,7 +65,7 @@ export function demoState(now = new Date()) {
         plaka: HERO_PLATE,
         marka: "Renault",
         model: "Megane 3 SW",
-        yil: "2012",
+        yil: DEMO_MEGANE_YEAR,
         yakit: "Dizel",
         km: 12540,
         renk: "Beyaz",
@@ -122,9 +138,59 @@ export function maybeSeedDemo(state, persistFn) {
   return state;
 }
 
-export function heroImageSrc(vehicle) {
-  if (vehicle?.foto) return vehicle.foto;
-  return DEFAULT_HERO_SRC;
+export function userHeroPhotos(vehicle) {
+  const extras = [];
+  if (vehicle?.foto) extras.push(vehicle.foto);
+  if (Array.isArray(vehicle?.fotos)) {
+    for (const src of vehicle.fotos) {
+      if (src) extras.push(src);
+    }
+  }
+  return [...new Set(extras)];
+}
+
+export function heroSlides(vehicle) {
+  return [...DEFAULT_HERO_GALLERY.map((slide) => slide.src), ...userHeroPhotos(vehicle)];
+}
+
+/** First/last clones so wrap-around never shows an empty frame. */
+export function loopedHeroSlides(slides) {
+  if (!slides.length) return [];
+  if (slides.length === 1) return [slides[0]];
+  return [slides[slides.length - 1], ...slides, slides[0]];
+}
+
+export function heroTrackOffset(logicalIndex, length) {
+  if (length <= 1) return 0;
+  return -(clampHeroIndex(logicalIndex, length) + 1) * 100;
+}
+
+export function clampHeroIndex(index, length) {
+  if (!length) return 0;
+  const n = Number(index);
+  if (!Number.isFinite(n)) return 0;
+  return ((Math.trunc(n) % length) + length) % length;
+}
+
+export function nextHeroIndex(index, length, delta = 1) {
+  return clampHeroIndex((Number(index) || 0) + delta, length);
+}
+
+/** Soldan sağa sürükleyince (doğal çevirme) gelen galeri id'leri. */
+export function dragRightHeroIds(fromIndex = DEFAULT_HERO_INDEX) {
+  const n = DEFAULT_HERO_GALLERY.length;
+  return [1, 2].map((delta) => DEFAULT_HERO_GALLERY[nextHeroIndex(fromIndex, n, delta)].id);
+}
+
+export function heroVisualIndex(logicalIndex, length) {
+  if (length <= 1) return 0;
+  return clampHeroIndex(logicalIndex, length) + 1;
+}
+
+export function heroImageSrc(vehicle, index = DEFAULT_HERO_INDEX) {
+  const slides = heroSlides(vehicle);
+  if (!slides.length) return DEFAULT_HERO_SRC;
+  return slides[clampHeroIndex(index, slides.length)];
 }
 
 /** Hero üzerinde model / yıl / motor / EDC yazılmaz. */
@@ -239,21 +305,23 @@ export function tabActive(path, route) {
 }
 
 export const ICONS = {
-  scan: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/></svg>`,
+  scan: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="2.25"/></svg>`,
   fuel: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V8.5A2.5 2.5 0 0 1 6.5 6H11a2.5 2.5 0 0 1 2.5 2.5V20"/><path d="M3 20h12"/><path d="M7 10h4"/><path d="M15.5 7.5l2.2 2.2a2 2 0 0 1 .6 1.4V18a2 2 0 0 0 2 2h.3"/><path d="M17.5 9.5V6.8a1 1 0 0 1 .3-.7l1.4-1.4"/></svg>`,
-  card: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>`,
-  gauge: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.2 18.2A8 8 0 1 1 18.8 18.2"/><path d="M12 12l4-2"/></svg>`,
-  dipstick: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5h8"/><path d="M12 5v10"/><path d="M9 19a3 3 0 0 0 6 0c0-2-3-4-3-4s-3 2-3 4z"/></svg>`,
-  chassis: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13h14"/><path d="M7 13V9h10v4"/><circle cx="7" cy="16.5" r="1.6"/><circle cx="17" cy="16.5" r="1.6"/><path d="M4 13l-1 3"/><path d="M20 13l1 3"/></svg>`,
-  lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>`,
-  list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h11"/><path d="M8 12h11"/><path d="M8 17h11"/><circle cx="4.5" cy="7" r=".8" fill="currentColor"/><circle cx="4.5" cy="12" r=".8" fill="currentColor"/><circle cx="4.5" cy="17" r=".8" fill="currentColor"/></svg>`,
-  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10.5V19h11v-8.5"/></svg>`,
-  car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15h16"/><path d="M5 15 7 9.5A2 2 0 0 1 8.8 8h6.4A2 2 0 0 1 17 9.5L19 15"/><circle cx="7.5" cy="16.5" r="1.4"/><circle cx="16.5" cy="16.5" r="1.4"/></svg>`,
-  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5"/><path d="M5 16h14"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>`,
-  chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M5 15l4-4 3 2 6-7"/></svg>`,
-  sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/><circle cx="8" cy="7" r="1.6" fill="currentColor"/><circle cx="14" cy="12" r="1.6" fill="currentColor"/><circle cx="10" cy="17" r="1.6" fill="currentColor"/></svg>`,
-  camera: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>`,
-  bulb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M8 15a6 6 0 1 1 8 0c-.8.8-1.2 1.6-1.3 2.5H9.3C9.2 16.6 8.8 15.8 8 15z"/></svg>`,
+  card: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M7 15h3.5"/></svg>`,
+  gauge: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.1 17.9A8 8 0 1 1 18.9 17.9"/><path d="M12 13.2 16.2 9"/><circle cx="12" cy="13.2" r="1.15"/></svg>`,
+  dipstick: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4.5h6"/><path d="M12 4.5v9.5"/><path d="M9.2 18.2a2.8 2.8 0 0 0 5.6 0c0-1.7-2.8-3.7-2.8-3.7s-2.8 2-2.8 3.7z"/></svg>`,
+  chassis: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 13.2h15"/><path d="M7 13.2V9.2h10v4"/><circle cx="7.2" cy="16.6" r="1.55"/><circle cx="16.8" cy="16.6" r="1.55"/><path d="M4.5 13.2 3.4 16"/><path d="M19.5 13.2 20.6 16"/></svg>`,
+  lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9.5" rx="2.25"/><path d="M8.2 11V8.2a3.8 3.8 0 0 1 7.6 0V11"/></svg>`,
+  list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h10"/><path d="M9 12h10"/><path d="M9 17h10"/><circle cx="5" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1" fill="currentColor" stroke="none"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.2 12 4.8l8 6.4"/><path d="M6.8 10.4V19h10.4v-8.6"/></svg>`,
+  car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15.2h16"/><path d="M5.2 15.2 7 9.6A2 2 0 0 1 8.8 8.2h6.4A2 2 0 0 1 17 9.6l1.8 5.6"/><circle cx="7.5" cy="16.7" r="1.35"/><circle cx="16.5" cy="16.7" r="1.35"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.2 15.8V11a5.8 5.8 0 1 1 11.6 0v4.8"/><path d="M5 15.8h14"/><path d="M10.2 18.8a1.8 1.8 0 0 0 3.6 0"/></svg>`,
+  chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M5.5 15.5 9.2 11.2l3.1 2.4 6.2-7.1"/></svg>`,
+  sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/><circle cx="8" cy="7" r="1.55" fill="currentColor"/><circle cx="14.5" cy="12" r="1.55" fill="currentColor"/><circle cx="10" cy="17" r="1.55" fill="currentColor"/></svg>`,
+  camera: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.2 8.2h2.8l1.35-1.7h7.3l1.35 1.7h2.8a1.1 1.1 0 0 1 1.1 1.1v8.4a1.1 1.1 0 0 1-1.1 1.1H4.2a1.1 1.1 0 0 1-1.1-1.1v-8.4a1.1 1.1 0 0 1 1.1-1.1z"/><circle cx="12" cy="13.2" r="3"/></svg>`,
+  bulb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 17.6h5.6"/><path d="M10.2 20.2h3.6"/><path d="M8.2 14.6a5.8 5.8 0 1 1 7.6 0c-.7.7-1.1 1.45-1.2 2.25H9.4c-.1-.8-.5-1.55-1.2-2.25z"/></svg>`,
+  chevronLeft: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>`,
+  chevronRight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6.5 15 12l-5.5 5.5"/></svg>`,
 };
 
 export function iconSvg(name) {
