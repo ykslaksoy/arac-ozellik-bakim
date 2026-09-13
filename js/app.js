@@ -303,7 +303,7 @@ function bindHeroCarousel(stage, track, dots, length) {
   });
 
   stage.addEventListener("pointerdown", (e) => {
-    if (e.target.closest(".foto-chip, .hero-dots, .hero-nav")) return;
+    if (e.target.closest(".foto-chip, .hero-dots, .hero-nav, button")) return;
     dragging = true;
     startX = e.clientX;
     origin = heroSlideIndex;
@@ -396,20 +396,12 @@ function renderHome() {
     type: "button",
     className: "hero-nav hero-nav-prev",
     "aria-label": "Önceki açı",
-    onClick: (e) => {
-      e.stopPropagation();
-      stage._heroGo?.(heroSlideIndex - 1);
-    },
   });
   prevBtn.innerHTML = iconSvg("chevronLeft");
   const nextBtn = el("button", {
     type: "button",
     className: "hero-nav hero-nav-next",
     "aria-label": "Sonraki açı",
-    onClick: (e) => {
-      e.stopPropagation();
-      stage._heroGo?.(heroSlideIndex + 1);
-    },
   });
   nextBtn.innerHTML = iconSvg("chevronRight");
 
@@ -422,6 +414,19 @@ function renderHome() {
   const dots = el("div", { className: "hero-dots" });
   paintHeroDots(dots, heroSlideIndex, slides.length);
   bindHeroCarousel(stage, track, dots, slides.length);
+
+  const goPrev = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    stage._heroGo?.(heroSlideIndex - 1);
+  };
+  const goNext = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    stage._heroGo?.(heroSlideIndex + 1);
+  };
+  prevBtn.addEventListener("click", goPrev);
+  nextBtn.addEventListener("click", goNext);
 
   const foto = el("label", { className: "foto-chip" });
   foto.innerHTML = `${iconSvg("camera")}<span>Foto</span>`;
