@@ -142,12 +142,18 @@ test("OBD pill bağlı değil; halka/overlay yok", () => {
   assert.equal(OBD_PILL.ring, false);
 });
 
-test("Tara viewfinder ikonu; yakıt pompası değil", () => {
+test("Referans ikon şekilleri: scan frame, yakıt nozül, pasta özet", () => {
   assert.equal(HOME_ACTIONS_TOP[0].icon, "scan");
-  assert.match(ICONS.scan, /M4 8V6/);
-  assert.match(ICONS.scan, /circle cx="12"/);
-  assert.doesNotMatch(ICONS.scan, /15\.5 7\.5/);
-  assert.match(ICONS.fuel, /15\.5 7\.5/);
+  assert.match(ICONS.scan, /M7 4H5/);
+  assert.match(ICONS.scan, /M7 12h10/);
+  assert.doesNotMatch(ICONS.scan, /circle cx="12"/);
+  assert.match(ICONS.fuel, /M9 3\.8h3\.6/);
+  assert.match(ICONS.gauge, /M16\.8 5\.2v2\.2/);
+  assert.match(ICONS.dipstick, /M8\.2 15\.8/);
+  assert.match(ICONS.chassis, /M16\.6 14\.4/);
+  assert.match(ICONS.lock, /M18\.2 16\.2v2\.8/);
+  assert.match(ICONS.list, /M9\.2 10\.2 10\.4 11\.4/);
+  assert.match(ICONS.sliders, /circle cx="12" cy="12"/);
   assert.match(ICONS.chevronLeft, /14\.5 6\.5/);
   assert.match(ICONS.chevronRight, /9\.5 6\.5/);
 });

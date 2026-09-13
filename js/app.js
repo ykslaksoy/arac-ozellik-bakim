@@ -391,16 +391,6 @@ function renderHome() {
     track.append(slide);
   }
 
-  const stage = el("div", {
-    className: "hero-stage",
-    tabindex: "0",
-    "aria-label": "Arabayı oklarla veya sürükleyerek çevirin",
-  }, [track]);
-
-  const dots = el("div", { className: "hero-dots" });
-  paintHeroDots(dots, heroSlideIndex, slides.length);
-  bindHeroCarousel(stage, track, dots, slides.length);
-
   const prevBtn = el("button", {
     type: "button",
     className: "hero-nav hero-nav-prev",
@@ -421,6 +411,16 @@ function renderHome() {
     },
   });
   nextBtn.innerHTML = iconSvg("chevronRight");
+
+  const stage = el("div", {
+    className: "hero-stage",
+    tabindex: "0",
+    "aria-label": "Arabayı oklarla veya sürükleyerek çevirin",
+  }, [track, prevBtn, nextBtn]);
+
+  const dots = el("div", { className: "hero-dots" });
+  paintHeroDots(dots, heroSlideIndex, slides.length);
+  bindHeroCarousel(stage, track, dots, slides.length);
 
   const foto = el("label", { className: "foto-chip" });
   foto.innerHTML = `${iconSvg("camera")}<span>Foto</span>`;
@@ -443,8 +443,6 @@ function renderHome() {
 
   const hero = el("section", { className: "hero-card" }, [
     stage,
-    prevBtn,
-    nextBtn,
     dots,
     foto,
   ]);

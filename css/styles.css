@@ -172,15 +172,18 @@ body {
   border-radius: 22px;
   position: relative;
   overflow: hidden;
-  min-height: 16.4rem;
+  min-height: 15.6rem;
 }
 
 .hero-stage {
+  position: relative;
   overflow: hidden;
   padding: 0;
+  height: 15.2rem;
   cursor: grab;
   touch-action: pan-y;
   outline: none;
+  background: #f3f5f6;
 }
 
 .hero-stage.is-dragging {
@@ -193,6 +196,7 @@ body {
 
 .hero-track {
   display: flex;
+  height: 100%;
   width: 100%;
   transition: transform 220ms ease;
   will-change: transform;
@@ -202,17 +206,20 @@ body {
   flex: 0 0 100%;
   width: 100%;
   min-width: 100%;
+  height: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .hero-photo {
   display: block;
-  width: 124%;
-  height: 16rem;
-  margin-left: -12%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  object-position: center 42%;
-  background: #fff;
+  object-position: center center;
+  transform: scale(1.28);
+  transform-origin: center center;
+  background: #f3f5f6;
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
@@ -220,20 +227,20 @@ body {
 
 .hero-nav {
   position: absolute;
-  top: 42%;
+  top: 50%;
   transform: translateY(-50%);
-  z-index: 2;
-  width: 2.05rem;
-  height: 2.05rem;
+  z-index: 3;
+  width: 2.1rem;
+  height: 2.1rem;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(21, 32, 40, 0.1);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   color: var(--ink-soft);
   display: grid;
   place-items: center;
   cursor: pointer;
-  box-shadow: 0 6px 14px rgba(21, 32, 40, 0.08);
+  box-shadow: 0 6px 14px rgba(21, 32, 40, 0.1);
 }
 
 .hero-nav svg {
@@ -241,12 +248,18 @@ body {
   height: 1.05rem;
 }
 
+.hero-nav-prev,
+.hero-nav-next {
+  inset-inline: auto;
+}
+
 .hero-nav-prev {
-  left: 0.55rem;
+  left: 0.7rem;
 }
 
 .hero-nav-next {
-  right: 0.55rem;
+  right: 0.7rem;
+  left: auto;
 }
 
 .hero-dots {
