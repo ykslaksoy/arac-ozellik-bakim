@@ -73,47 +73,52 @@ test("hero: model/yıl/motor/EDC yazısı yok, varsayılan Megane görseli", () 
   assert.equal(heroImageSrc({}, DEFAULT_HERO_INDEX), DEFAULT_HERO_SRC);
 });
 
-test("hero galeri: L→R sürükleme ön-sağ → ön → ön-sol", () => {
-  assert.equal(DEFAULT_HERO_INDEX, 0);
+test("hero galeri: saat yönü ön → yan → arka; varsayılan paneled ön-sağ", () => {
+  assert.equal(DEFAULT_HERO_INDEX, 1);
+  assert.equal(DEFAULT_HERO_GALLERY[DEFAULT_HERO_INDEX].src, DEFAULT_HERO_SRC);
   assert.deepEqual(HERO_ORBIT_IDS, [
-    "right-three-quarter",
     "front",
-    "left-three-quarter",
-    "left-side",
-    "rear-left-quarter",
-    "rear",
-    "rear-right-quarter",
+    "right-three-quarter",
     "right-side",
+    "rear-right-quarter",
+    "rear",
+    "rear-left-quarter",
+    "left-side",
+    "left-three-quarter",
   ]);
   assert.deepEqual(
     DEFAULT_HERO_GALLERY.map((s) => s.src),
     [
-      "assets/hero-megane.png",
       "assets/hero-megane-front.png",
-      "assets/hero-megane-left-q.png",
-      "assets/hero-megane-left.png",
-      "assets/hero-megane-rear-left-q.png",
-      "assets/hero-megane-rear.png",
-      "assets/hero-megane-rear-right-q.png",
+      "assets/hero-megane.png",
       "assets/hero-megane-right.png",
+      "assets/hero-megane-rear-right-q.png",
+      "assets/hero-megane-rear.png",
+      "assets/hero-megane-rear-left-q.png",
+      "assets/hero-megane-left.png",
+      "assets/hero-megane-left-q.png",
     ],
   );
   const srcs = DEFAULT_HERO_GALLERY.map((s) => s.src);
   assert.equal(new Set(srcs).size, 8);
   assert.ok(HERO_LEFT_IDS.every((id) => HERO_ORBIT_IDS.includes(id)));
-  assert.deepEqual(dragRightHeroIds(0), ["front", "left-three-quarter"]);
+  // +1 from default (ön-sağ) → sağ yan → arka-sağ
+  assert.deepEqual(dragRightHeroIds(DEFAULT_HERO_INDEX), [
+    "right-side",
+    "rear-right-quarter",
+  ]);
   assert.equal(nextHeroIndex(0, 8, 1), 1);
   assert.equal(nextHeroIndex(0, 8, -1), 7);
   assert.equal(nextHeroIndex(7, 8, 1), 0);
-  assert.equal(DEFAULT_HERO_GALLERY[0].src, DEFAULT_HERO_SRC);
-  assert.equal(DEFAULT_HERO_GALLERY[1].id, "front");
-  assert.equal(DEFAULT_HERO_GALLERY[2].id, "left-three-quarter");
-  assert.equal(DEFAULT_HERO_GALLERY[3].id, "left-side");
-  assert.equal(DEFAULT_HERO_GALLERY[7].id, "right-side");
+  assert.equal(DEFAULT_HERO_GALLERY[0].id, "front");
+  assert.equal(DEFAULT_HERO_GALLERY[1].id, "right-three-quarter");
+  assert.equal(DEFAULT_HERO_GALLERY[2].id, "right-side");
+  assert.equal(DEFAULT_HERO_GALLERY[4].id, "rear");
+  assert.equal(DEFAULT_HERO_GALLERY[7].id, "left-three-quarter");
 
   const builtIn = heroSlides({});
   assert.equal(builtIn.length, 8);
-  assert.equal(builtIn[0], DEFAULT_HERO_SRC);
+  assert.equal(builtIn[DEFAULT_HERO_INDEX], DEFAULT_HERO_SRC);
   assert.ok(builtIn.every((src) => src.startsWith("assets/hero-megane")));
   const looped = loopedHeroSlides(builtIn);
   assert.equal(looped.length, 10);
@@ -144,15 +149,17 @@ test("OBD pill bağlı değil; halka/overlay yok", () => {
 
 test("Referans ikon şekilleri: scan frame, yakıt nozül, pasta özet", () => {
   assert.equal(HOME_ACTIONS_TOP[0].icon, "scan");
-  assert.match(ICONS.scan, /M7 4H5/);
-  assert.match(ICONS.scan, /M7 12h10/);
+  assert.match(ICONS.scan, /M7\.2 4\.2H5\.2/);
+  assert.match(ICONS.scan, /M8\.2 12h7\.6/);
   assert.doesNotMatch(ICONS.scan, /circle cx="12"/);
-  assert.match(ICONS.fuel, /M9 3\.8h3\.6/);
-  assert.match(ICONS.gauge, /M16\.8 5\.2v2\.2/);
-  assert.match(ICONS.dipstick, /M8\.2 15\.8/);
-  assert.match(ICONS.chassis, /M16\.6 14\.4/);
-  assert.match(ICONS.lock, /M18\.2 16\.2v2\.8/);
-  assert.match(ICONS.list, /M9\.2 10\.2 10\.4 11\.4/);
+  assert.match(ICONS.fuel, /fill-opacity="\.16"/);
+  assert.match(ICONS.fuel, /M10\.4 10\.2v7\.2/);
+  assert.match(ICONS.card, /circle cx="17\.4"/);
+  assert.match(ICONS.gauge, /M16\.8 5\.1v2\.1/);
+  assert.match(ICONS.dipstick, /M8\.4 16\.2/);
+  assert.match(ICONS.chassis, /M16\.4 14\.2/);
+  assert.match(ICONS.lock, /M18 15\.9v3/);
+  assert.match(ICONS.list, /M8\.8 10 10 11\.2/);
   assert.match(ICONS.sliders, /circle cx="12" cy="12"/);
   assert.match(ICONS.chevronLeft, /14\.5 6\.5/);
   assert.match(ICONS.chevronRight, /9\.5 6\.5/);

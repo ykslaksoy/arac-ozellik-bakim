@@ -1,18 +1,19 @@
 :root {
-  --ink: #152028;
+  --ink: #111827;
   --ink-soft: #3d4f5c;
-  --muted: #6b7c88;
-  --paper: #f4f6f7;
+  --muted: #8b97a0;
+  --paper: #eef1f4;
   --surface: #ffffff;
-  --line: rgba(21, 32, 40, 0.1);
-  --accent: #0f6b5c;
-  --accent-deep: #0a4d42;
-  --accent-soft: rgba(15, 107, 92, 0.12);
+  --line: rgba(17, 24, 39, 0.08);
+  --accent: #1a4f48;
+  --accent-deep: #123a35;
+  --accent-soft: rgba(26, 79, 72, 0.12);
   --warn: #b45309;
-  --danger: #b42318;
-  --ok: #0f6b5c;
-  --shadow: 0 10px 28px rgba(21, 32, 40, 0.06);
-  --radius: 18px;
+  --danger: #e24b4b;
+  --ok: #1a4f48;
+  --shadow: 0 8px 24px rgba(17, 24, 39, 0.05);
+  --radius: 28px;
+  --radius-card: 28px;
   --font-display: "Manrope", sans-serif;
   --font-body: "Manrope", sans-serif;
   --phone: 390px;
@@ -49,6 +50,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.04);
 }
 
 .app-header {
@@ -115,9 +117,9 @@ body {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: end;
   gap: 0.1rem;
-  padding: 0.45rem 0.2rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.5rem 0.15rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
   background: #fff;
-  border-top: 1px solid rgba(21, 32, 40, 0.06);
+  border-top: 1px solid rgba(17, 24, 39, 0.06);
 }
 
 .tabbar a {
@@ -126,18 +128,19 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.22rem;
+  gap: 0.2rem;
   text-decoration: none;
   color: #8b97a0;
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  padding: 0.15rem 0.1rem;
+  padding: 0.12rem 0.08rem;
 }
 
 .tabbar a svg {
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 1.55;
 }
 
 .tabbar a.active {
@@ -146,33 +149,35 @@ body {
 
 .tab-badge {
   position: absolute;
-  top: -0.15rem;
-  right: 0.55rem;
+  top: -0.12rem;
+  right: 0.48rem;
   min-width: 0.95rem;
   height: 0.95rem;
   padding: 0 0.22rem;
   border-radius: 999px;
-  background: #e24b4b;
+  background: var(--danger);
   color: #fff;
   font-size: 0.58rem;
   line-height: 0.95rem;
   text-align: center;
+  font-weight: 800;
 }
 
 .home {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.72rem;
   padding: 0.15rem 0 0.85rem;
 }
 
 .hero-card {
   margin: 0 0.85rem;
   background: #fff;
-  border-radius: 22px;
+  border-radius: var(--radius-card);
   position: relative;
   overflow: hidden;
   min-height: 15.6rem;
+  box-shadow: var(--shadow);
 }
 
 .hero-stage {
@@ -363,65 +368,74 @@ body {
   margin: 0 0.85rem;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  background: #fff;
-  border-radius: 20px;
-  padding: 1.15rem 0.2rem 0.95rem;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 1.2rem 0.35rem 1.05rem;
+  box-shadow: var(--shadow);
 }
 
 .action-row a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.55rem;
+  justify-content: flex-start;
+  gap: 0.48rem;
   text-decoration: none;
   color: var(--ink);
-  font-size: 0.78rem;
-  font-weight: 750;
+  font-size: 0.74rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-align: center;
+  padding: 0 0.15rem;
 }
 
 .action-ico {
-  width: 2.15rem;
-  height: 2.15rem;
+  width: 2.35rem;
+  height: 2.35rem;
   color: var(--accent);
+  display: grid;
+  place-items: center;
 }
 
 .action-ico svg {
   width: 100%;
   height: 100%;
+  display: block;
 }
 
 .metric-strip {
   margin: 0 0.85rem;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  background: #fff;
-  border-radius: 20px;
-  padding: 0.95rem 0.35rem 0.85rem;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 1rem 0.4rem 0.9rem;
+  box-shadow: var(--shadow);
 }
 
 .metric {
-  padding: 0 0.28rem;
+  padding: 0 0.3rem;
   text-align: left;
 }
 
 .metric + .metric {
-  border-left: 1px solid rgba(21, 32, 40, 0.06);
-  padding-left: 0.45rem;
+  border-left: 1px solid rgba(17, 24, 39, 0.07);
+  padding-left: 0.48rem;
 }
 
 .metric-label {
   display: block;
   color: var(--muted);
-  font-size: 0.62rem;
-  font-weight: 700;
+  font-size: 0.6rem;
+  font-weight: 650;
   line-height: 1.25;
 }
 
 .metric-value {
   display: block;
-  margin-top: 0.28rem;
-  font-size: 0.92rem;
+  margin-top: 0.32rem;
+  font-size: 0.94rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--ink);
@@ -430,10 +444,10 @@ body {
 
 .metric-hint {
   display: block;
-  margin-top: 0.12rem;
+  margin-top: 0.14rem;
   color: var(--muted);
-  font-size: 0.62rem;
-  font-weight: 650;
+  font-size: 0.6rem;
+  font-weight: 600;
 }
 
 .page-pad {

@@ -322,8 +322,9 @@ function bindHeroCarousel(stage, track, dots, length) {
     dragging = false;
     stage.classList.remove("is-dragging");
     const dx = e.clientX - startX;
-    if (dx > 40) go(origin + 1);
-    else if (dx < -40) go(origin - 1);
+    // Sola kaydır = sonraki açı (+1); sağa kaydır = önceki (-1)
+    if (dx < -40) go(origin + 1);
+    else if (dx > 40) go(origin - 1);
     else go(origin);
   };
   stage.addEventListener("pointerup", end);

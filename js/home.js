@@ -9,19 +9,24 @@ import {
 } from "./logic.js";
 
 export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
-/** Repodaki doğru Megane yılı (facelift Phase 2 / kullanıcı onayı). */
+/** Repodaki doğru Megane 3 (paneled/segmented kaput, Phase 2 SW). */
 export const DEMO_MEGANE_YEAR = "2012";
-export const DEFAULT_HERO_INDEX = 0;
-/** L→R sürükleyince (arabayı çevirme): ön-sağ → ön → ön-sol → sol → arka-sol → arka → arka-sağ → sağ. */
+/** Varsayılan: parçalı kaputlu ön-sağ 3/4. */
+export const DEFAULT_HERO_INDEX = 1;
+/**
+ * Saat yönü turntable (yukarıdan):
+ * ön → ön-sağ → sağ → arka-sağ → arka → arka-sol → sol → ön-sol → (ön).
+ * Sağ ok / sola kaydırma = +1.
+ */
 export const DEFAULT_HERO_GALLERY = [
-  { id: "right-three-quarter", src: "assets/hero-megane.png" },
   { id: "front", src: "assets/hero-megane-front.png" },
-  { id: "left-three-quarter", src: "assets/hero-megane-left-q.png" },
-  { id: "left-side", src: "assets/hero-megane-left.png" },
-  { id: "rear-left-quarter", src: "assets/hero-megane-rear-left-q.png" },
-  { id: "rear", src: "assets/hero-megane-rear.png" },
-  { id: "rear-right-quarter", src: "assets/hero-megane-rear-right-q.png" },
+  { id: "right-three-quarter", src: "assets/hero-megane.png" },
   { id: "right-side", src: "assets/hero-megane-right.png" },
+  { id: "rear-right-quarter", src: "assets/hero-megane-rear-right-q.png" },
+  { id: "rear", src: "assets/hero-megane-rear.png" },
+  { id: "rear-left-quarter", src: "assets/hero-megane-rear-left-q.png" },
+  { id: "left-side", src: "assets/hero-megane-left.png" },
+  { id: "left-three-quarter", src: "assets/hero-megane-left-q.png" },
 ];
 export const HERO_LEFT_IDS = ["rear-left-quarter", "left-side", "left-three-quarter"];
 export const HERO_ORBIT_IDS = DEFAULT_HERO_GALLERY.map((slide) => slide.id);
@@ -176,7 +181,7 @@ export function nextHeroIndex(index, length, delta = 1) {
   return clampHeroIndex((Number(index) || 0) + delta, length);
 }
 
-/** Soldan sağa sürükleyince (doğal çevirme) gelen galeri id'leri. */
+/** Sağ ok / sola kaydırma (+1) ile gelen sonraki galeri id'leri. */
 export function dragRightHeroIds(fromIndex = DEFAULT_HERO_INDEX) {
   const n = DEFAULT_HERO_GALLERY.length;
   return [1, 2].map((delta) => DEFAULT_HERO_GALLERY[nextHeroIndex(fromIndex, n, delta)].id);
@@ -305,22 +310,22 @@ export function tabActive(path, route) {
 }
 
 export const ICONS = {
-  /* Üst aksiyon — referans screenshot şekilleri */
-  scan: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4H5a1 1 0 0 0-1 1v2"/><path d="M17 4h2a1 1 0 0 1 1 1v2"/><path d="M20 17v2a1 1 0 0 1-1 1h-2"/><path d="M4 17v2a1 1 0 0 0 1 1h2"/><path d="M7 12h10"/></svg>`,
-  fuel: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3.8h3.6c.7 0 1.3.5 1.5 1.2L15.2 10H8.4L9.5 5c.2-.7.8-1.2 1.5-1.2z"/><path d="M10.2 10v6.8"/><path d="M13.6 10v2.6c0 1 .5 1.8 1.4 2.2l1.8.8"/><path d="M14.8 7.6c1 .5 1.8 1.1 2.4 1.9"/><path d="M7.8 17.2c.35-.9 1.1-1.4 2.1-1.4.9 0 1.6.4 2 1.1"/><path d="M6.2 19.2c.55.7 1.35 1.1 2.25 1.1"/><path d="M5.4 16.8c-.45.25-.8.7-1 1.2"/><path d="M4.8 18.6c.45.45 1 .7 1.55.65"/></svg>`,
-  card: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.8 9.2 17.2 5.4a1.6 1.6 0 0 1 2 .9l1.5 5.4a1.6 1.6 0 0 1-.9 2L6.4 17.5a1.6 1.6 0 0 1-2-.9L2.9 11.2a1.6 1.6 0 0 1 .9-2z"/><path d="M5.2 11.1h3.2"/><path d="M4.6 13.2h4"/><path d="M14.8 9.8h3.4"/></svg>`,
-  gauge: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a8 8 0 1 0 7.5 10.7"/><path d="M12 4v8l6.2 2.4"/><path d="M16.8 5.2v2.2"/><path d="M15.7 6.3h2.2"/></svg>`,
+  /* Üst aksiyon — referans: dolgulu iki ton ikonlar */
+  scan: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.2 4.2H5.2A1.2 1.2 0 0 0 4 5.4v2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M16.8 4.2h2A1.2 1.2 0 0 1 20 5.4v2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M20 16.6v2A1.2 1.2 0 0 1 18.8 19.8h-2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M4 16.6v2A1.2 1.2 0 0 0 5.2 19.8h2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M8.2 12h7.6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M9.4 9.2c1.5-1.2 3.7-1.2 5.2 0" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" opacity=".55"/><path d="M10.2 14.8c1.1 1 2.5 1 3.6 0" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" opacity=".55"/></svg>`,
+  fuel: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8.6 4.2h4.2c.85 0 1.55.6 1.72 1.42L15.6 10.2H7.9l1-4.58A1.75 1.75 0 0 1 8.6 4.2Z" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M10.4 10.2v7.2" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/><path d="M14.2 10.2v2.4c0 1.05.55 2 1.5 2.45l1.85.9" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/><path d="M15.5 7.4c1.05.55 1.9 1.25 2.55 2.1" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/><path d="M6.6 16.4c.7-1.35 2.35-1.85 3.7-1.05.9.55 1.35 1.45 1.35 2.4" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M5.3 18.7c.7.95 1.75 1.45 2.9 1.35" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M4.6 16.8c-.55.35-1 .9-1.15 1.55" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>`,
+  card: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.2" y="6.2" width="17.6" height="11.6" rx="2.2" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="1.55"/><path d="M3.2 9.6h17.6" stroke="currentColor" stroke-width="1.7"/><rect x="5.4" y="11.8" width="3.2" height="2.2" rx=".45" fill="currentColor" fill-opacity=".35"/><circle cx="15.6" cy="14.6" r="1.35" fill="currentColor" fill-opacity=".28"/><circle cx="17.4" cy="14.6" r="1.35" fill="currentColor" fill-opacity=".45"/></svg>`,
+  gauge: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12.2" r="7.2" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="1.55"/><path d="M12 12.2 16.6 8.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 5V7.2M5.8 12.2H8M12 17.2v2M16 12.2h2.2" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" opacity=".7"/><path d="M16.8 5.1v2.1M15.7 6.15h2.2" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>`,
   /* Alt aksiyon */
-  dipstick: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.2 15.8 15.5 8.5"/><path d="M14.2 7.2 16.8 4.6c.5-.5 1.3-.5 1.8 0l.8.8c.5.5.5 1.3 0 1.8L16.8 9.8"/><path d="M9.5 17.1 6.9 19.7c-.5.5-1.3.5-1.8 0l-.8-.8c-.5-.5-.5-1.3 0-1.8L7.1 14.5"/><path d="M7.8 8.5 15.5 16.2"/><path d="M7.2 7.9 5.4 6.1"/><path d="M16.6 17.3 18.4 19.1"/></svg>`,
-  chassis: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 9.8h11.8"/><path d="M6 9.8V7.6h9.4v2.2"/><path d="M6.6 13.2h8.8"/><path d="M7.4 9.8v3.4"/><path d="M10.8 9.8v3.4"/><path d="M14.2 9.8v3.4"/><path d="M7 13.2 5.9 15.8"/><path d="M14.8 13.2 15.9 15.8"/><path d="M8.4 15.8h6"/><path d="M16.6 14.4h2.2a1.5 1.5 0 0 1 1.5 1.5v1.8c0 .4-.2.8-.5 1l-2.2 1.2-2.2-1.2a1.2 1.2 0 0 1-.5-1v-1.8a1.5 1.5 0 0 1 1.5-1.5h.2"/><path d="M18.2 16.2v1.6"/><path d="M18.2 18.6v.2"/></svg>`,
-  lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="10.2" width="10.5" height="8.6" rx="2"/><path d="M8.4 10.2V8a3.3 3.3 0 0 1 6.6 0v2.2"/><circle cx="18.2" cy="17.6" r="3.1"/><path d="M18.2 16.2v2.8"/><path d="M16.8 17.6h2.8"/></svg>`,
-  list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4.5h9.5a1.5 1.5 0 0 1 1.5 1.5v13a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 19V6a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M9.5 3.8h6"/><path d="M9.2 10.2 10.4 11.4 12.8 9"/><path d="M9.2 14.2 10.4 15.4 12.8 13"/><path d="M9.2 18.1 10.4 19.3 12.8 16.9"/><path d="M14.2 10.5h2.6"/><path d="M14.2 14.5h2.6"/><path d="M14.2 18.4h2.6"/></svg>`,
+  dipstick: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8.4 16.2 15.2 9.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M13.9 8.1 16.7 5.3a1.35 1.35 0 0 1 1.9 0l.7.7a1.35 1.35 0 0 1 0 1.9L16.5 10.7" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M10.1 17.3 7.3 20.1a1.35 1.35 0 0 1-1.9 0l-.7-.7a1.35 1.35 0 0 1 0-1.9L7.7 14.7" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M7.6 8.8 15.4 16.6" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/><path d="M7 8.1 5.3 6.4M16.8 17.5 18.5 19.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>`,
+  chassis: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.6 10.2h10.8" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/><path d="M5.8 10.2V8.2h8.4v2" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M6.4 13.4h7.8M7.2 10.2v3.2M10.2 10.2v3.2M13.2 10.2v3.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M6.8 13.4 5.8 15.8M13.8 13.4 14.8 15.8M8.2 15.8h5.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M16.4 14.2h2.1a1.55 1.55 0 0 1 1.55 1.55v1.7c0 .4-.2.78-.52 1.02l-2.1 1.15-2.1-1.15a1.25 1.25 0 0 1-.53-1.02v-1.7A1.55 1.55 0 0 1 16.4 14.2Z" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M17.95 15.7v2.5M17.95 19v.25" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>`,
+  lock: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5.6" y="10" width="10.2" height="8.4" rx="2" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.55"/><path d="M8 10V7.8a3.1 3.1 0 0 1 6.2 0V10" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/><circle cx="18" cy="17.4" r="3.15" fill="currentColor" fill-opacity=".2" stroke="currentColor" stroke-width="1.45"/><path d="M18 15.9v3M16.55 17.4H19.45" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>`,
+  list: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.8 4.4h9.2A1.6 1.6 0 0 1 18.6 6v12.6a1.6 1.6 0 0 1-1.6 1.6H7.8A1.6 1.6 0 0 1 6.2 18.6V6A1.6 1.6 0 0 1 7.8 4.4Z" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="1.5"/><path d="M9.2 3.7h6.4" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/><path d="M8.8 10 10 11.2 12.5 8.7M8.8 14 10 15.2 12.5 12.7M8.8 18 10 19.2 12.5 16.7" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 10.4h2.5M14 14.4h2.5M14 18.3h2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
   /* Alt nav — ince çizgi */
   home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4l8 7"/><path d="M7 10.2V19h10v-8.8"/></svg>`,
-  car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.2 15.2h11.6"/><path d="M7.2 15.2 8.6 10.8A2 2 0 0 1 10.5 9.5h3a2 2 0 0 1 1.9 1.3l1.4 4.4"/><circle cx="8.4" cy="16.6" r="1.15"/><circle cx="15.6" cy="16.6" r="1.15"/><path d="M9.8 11.2h4.4"/></svg>`,
+  car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.2 14.8h13.6"/><path d="M7 14.8 8.2 11.2A2.1 2.1 0 0 1 10.2 9.8h3.6a2.1 2.1 0 0 1 2 1.4L17 14.8"/><circle cx="8.2" cy="16.5" r="1.2"/><circle cx="15.8" cy="16.5" r="1.2"/><path d="M9.4 11.4h5.2"/><path d="M8.6 9.8 9.5 7.8h5l.9 2"/></svg>`,
   bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 16V11a5.5 5.5 0 1 1 11 0v5"/><path d="M5.5 16h13"/><path d="M10.5 18.4a1.5 1.5 0 0 0 3 0"/></svg>`,
   chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18h16"/><path d="M6 14.5 10 10l3 2.5 5.5-6"/><path d="M16.2 6.5h2.8v2.8"/></svg>`,
-  sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.8v2.2"/><path d="M12 18v2.2"/><path d="M4.9 7.1 6.5 8.6"/><path d="M17.5 15.4 19.1 17"/><path d="M3.8 12h2.2"/><path d="M18 12h2.2"/><path d="M4.9 16.9 6.5 15.4"/><path d="M17.5 8.6 19.1 7.1"/></svg>`,
+  sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.8v2.2M12 18v2.2M4.9 7.1 6.5 8.6M17.5 15.4 19.1 17M3.8 12h2.2M18 12h2.2M4.9 16.9 6.5 15.4M17.5 8.6 19.1 7.1"/></svg>`,
   camera: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.2 8.2h2.8l1.35-1.7h7.3l1.35 1.7h2.8a1.1 1.1 0 0 1 1.1 1.1v8.4a1.1 1.1 0 0 1-1.1 1.1H4.2a1.1 1.1 0 0 1-1.1-1.1v-8.4a1.1 1.1 0 0 1 1.1-1.1z"/><circle cx="12" cy="13.2" r="3"/></svg>`,
   bulb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 17.6h5.6"/><path d="M10.2 20.2h3.6"/><path d="M8.2 14.6a5.8 5.8 0 1 1 7.6 0c-.7.7-1.1 1.45-1.2 2.25H9.4c-.1-.8-.5-1.55-1.2-2.25z"/></svg>`,
   chevronLeft: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>`,
