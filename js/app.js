@@ -415,16 +415,30 @@ function renderHome() {
   paintHeroDots(dots, heroSlideIndex, slides.length);
   bindHeroCarousel(stage, track, dots, slides.length);
 
+  let navLock = false;
   const goPrev = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (navLock) return;
+    navLock = true;
     stage._heroGo?.(heroSlideIndex - 1);
+    setTimeout(() => {
+      navLock = false;
+    }, 260);
   };
   const goNext = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (navLock) return;
+    navLock = true;
     stage._heroGo?.(heroSlideIndex + 1);
+    setTimeout(() => {
+      navLock = false;
+    }, 260);
   };
+  // pointerdown: touch/pen/mouse (bazı otomasyon click üretmez)
+  prevBtn.addEventListener("pointerdown", goPrev);
+  nextBtn.addEventListener("pointerdown", goNext);
   prevBtn.addEventListener("click", goPrev);
   nextBtn.addEventListener("click", goNext);
 
