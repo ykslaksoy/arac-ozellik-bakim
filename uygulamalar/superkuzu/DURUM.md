@@ -1,18 +1,10 @@
 # Pin: Süper Kuzu
 
-- Cursor pin: **Süper Kuzu**
-- Takip klasörü: `uygulamalar/superkuzu`
-- PC: `Documents\projeler\superkuzu`
+PC’ye indirme yok. GitHub’dan kullanılacak; **public repo henüz yok.**
+
 - GitHub: yok
-- Canlı: —
-- Workspace: henüz repo yok — **Start from scratch** seçme
+- Cursor: **Start from scratch** seçme
 
-## Şu an
-
-Takip klasörü açıldı. Public GitHub’da `superkuzu` / `super-kuzu` yok.
-
-## Sonraki
-
-1. GitHub → New repository → `superkuzu` (ykslaksoy)
-2. Cursor Create Project → Workspace: `superkuzu`
-3. İlk kodu o repoya commit / push
+1. GitHub → New repository → `superkuzu`
+2. Create Project → Workspace `superkuzu`
+3. Agent kaydı o repoya gider

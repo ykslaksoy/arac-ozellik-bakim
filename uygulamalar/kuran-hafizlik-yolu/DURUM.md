@@ -1,17 +1,9 @@
 # Pin: Kur’an Hafızlık Yolu
 
-- Cursor pin: **Kur’an Hafızlık Yolu**
-- Takip klasörü: `uygulamalar/kuran-hafizlik-yolu`
-- PC: `Documents\projeler\kuran-hafizlik-yolu`
-- GitHub: yok (Cursor adı `kuran-hafizlik`)
-- Canlı: —
+PC’ye indirme yok. GitHub’dan kullanılacak; **repo henüz yok.**
 
-## Şu an
-
-Pin var, GitHub reposu yok. Agent kaydetmek için repo şart.
-
-## Sonraki
+- Cursor adı: `kuran-hafizlik`
+- GitHub: yok
 
 1. GitHub → New repository → `kuran-hafizlik`
-2. Cursor Workspace: `kuran-hafizlik` (Start from scratch değil)
-3. İlk commit’i o repoya at
+2. Create Project → Workspace `kuran-hafizlik`

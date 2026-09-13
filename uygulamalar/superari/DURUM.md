@@ -1,17 +1,9 @@
 # Pin: SuperAri
 
-- Cursor pin: **SuperAri**
-- Takip klasörü: `uygulamalar/superari`
-- PC: `Documents\projeler\superari`
-- GitHub: yok (Cursor listesinde `aricilik-egitim`)
-- Canlı: —
-- Workspace: **`aricilik-egitim`** / pin **SuperAri**
+PC’ye indirme yok. GitHub’dan kullanılacak; **public repo henüz yok.**
 
-## Şu an
-
-Pin var, public GitHub reposu yok.
-
-## Sonraki
+- Cursor listesi: `aricilik-egitim`
+- GitHub: yok
 
 1. GitHub → New repository → `aricilik-egitim` (veya `superari`)
-2. Cursor Workspace: o repo (Start from scratch değil)
+2. Create Project → Workspace o repo
