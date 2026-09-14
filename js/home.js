@@ -96,6 +96,16 @@ export const TAB_ITEMS = [
 
 export function demoState(now = new Date()) {
   const ym = currentYearMonth(now);
+  const prev = new Date(now);
+  prev.setDate(1);
+  prev.setMonth(prev.getMonth() - 1);
+  const prevYm = currentYearMonth(prev);
+  /* Kullanıcı: 1156 km / 55,71 L → ~4,82 L/100km; tutar ~87,22 TL/L motorin */
+  const tripKm = 1156;
+  const tripLitres = 55.71;
+  const pumpTl = 87.22;
+  const endKm = 12540;
+  const startKm = endKm - tripKm;
   return {
     vehicles: [
       {
@@ -105,7 +115,7 @@ export function demoState(now = new Date()) {
         model: "Megane 3 SW",
         yil: DEMO_MEGANE_YEAR,
         yakit: "Dizel",
-        km: 12540,
+        km: endKm,
         renk: "Beyaz",
         motor: "",
         sasi: "",
@@ -129,21 +139,22 @@ export function demoState(now = new Date()) {
       {
         id: "df1",
         vehicleId: "demo-megane",
-        tarih: `${ym}-02`,
-        km: 11584,
-        litre: 32.4,
-        /* ~güncel motorin × litre; canlı fiyat gelince applyPumpPricesToDemoFuels günceller */
-        ucret: 2826,
-        not: "Pompa ~87,22 TL/L",
+        tarih: `${prevYm}-22`,
+        km: startKm,
+        litre: 48.5,
+        /* önceki ay referans dolum (tüketim hesabında litre sayılmaz) */
+        ucret: Math.round(48.5 * pumpTl),
+        not: `Pompa ~${pumpTl.toFixed(2).replace(".", ",")} TL/L`,
       },
       {
         id: "df2",
         vehicleId: "demo-megane",
         tarih: `${ym}-18`,
-        km: 12140,
-        litre: 31.8,
-        ucret: 2774,
-        not: "Pompa ~87,22 TL/L",
+        km: endKm,
+        litre: tripLitres,
+        /* canlı fiyat gelince applyPumpPricesToDemoFuels günceller */
+        ucret: Math.round(tripLitres * pumpTl),
+        not: `Pompa ~${pumpTl.toFixed(2).replace(".", ",")} TL/L · ${tripKm} km`,
       },
     ],
     expenses: [
@@ -370,7 +381,7 @@ export function formatLitres(value) {
   if (value == null || Number.isNaN(Number(value))) return "—";
   return `${Number(value).toLocaleString("tr-TR", {
     minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
+    maximumFractionDigits: 2,
   })} L`;
 }
 
@@ -421,30 +432,31 @@ export function tabActive(path, route) {
 }
 
 export const ICONS = {
-  /* logo-icon-reference.jpg — duotone illustrated set */
-  /* Tara: köşe çerçeve + parmak izi sırtları + tarama çubuğu */
-  scan: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.8 3.4H5A1.6 1.6 0 0 0 3.4 5v2.8" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/><path d="M16.2 3.4H19A1.6 1.6 0 0 1 20.6 5v2.8" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/><path d="M20.6 16.2V19A1.6 1.6 0 0 1 19 20.6h-2.8" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/><path d="M3.4 16.2V19A1.6 1.6 0 0 0 5 20.6h2.8" stroke="currentColor" stroke-width="1.85" stroke-linecap="round"/><path d="M12 6.6c-2.55 1.15-4.15 2.95-4.15 5.15 0 2.55 1.8 4.25 4.15 4.25s4.15-1.7 4.15-4.25c0-2.2-1.6-4-4.15-5.15Z" fill="currentColor" fill-opacity=".1"/><path d="M12 6.9c-2.35 1.05-3.8 2.7-3.8 4.75 0 2.3 1.65 3.85 3.8 3.85s3.8-1.55 3.8-3.85c0-2.05-1.45-3.7-3.8-4.75" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/><path d="M12 8.55c-1.55.75-2.45 1.85-2.45 3.15 0 1.55 1.05 2.55 2.45 2.55s2.45-1 2.45-2.55c0-1.3-.9-2.4-2.45-3.15" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/><path d="M12 10.15c-.85.45-1.3 1.05-1.3 1.75 0 .9.55 1.45 1.3 1.45s1.3-.55 1.3-1.45c0-.7-.45-1.3-1.3-1.75" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M9.2 12.2h5.6" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/><path d="M12 11.35v1.7" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/></svg>`,
-  /* Yakıt: pompa tabancası + iki yaprak */
-  fuel: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.1 3.5h5.2c.95 0 1.7.7 1.85 1.62L17.1 11H8.2l.95-5.88A1.9 1.9 0 0 1 9.1 3.5Z" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M10.8 11v7.6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M14.2 6.2h1.55" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M16.4 11.2c.15 1.35.85 2.45 1.95 3.15l1.55.95" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.1 14.4c1.35-1.55 3.55-1.7 5-.25.45.45.75 1.05.85 1.7" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M4.2 17.2c1.05 1.35 2.7 1.75 4.2 1.15" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6.05 19.55c.7-1.15 1.95-1.55 3.1-1.05" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M8.55 18.05c.45-.85 1.35-1.2 2.2-.75" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M5.55 16.05c.55-.95 1.55-1.25 2.45-.75" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/></svg>`,
-  /* Masraf: hafif eğik kart + çip + logo daireleri */
-  card: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.4 7.1 19.2 4.55a2.1 2.1 0 0 1 2.4 1.75l1.15 9.95a2.1 2.1 0 0 1-1.75 2.35L5.2 21.15A2.1 2.1 0 0 1 2.8 19.4L1.65 9.45A2.1 2.1 0 0 1 3.4 7.1Z" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M2.2 10.35 21.1 7.35" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4.55 12.2 7.95 11.65 8.55 14.05 5.15 14.6Z" fill="currentColor" fill-opacity=".42"/><circle cx="16.6" cy="16.55" r="1.55" fill="currentColor" fill-opacity=".28" stroke="currentColor" stroke-width="1.15"/><circle cx="18.55" cy="16.9" r="1.55" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.15"/></svg>`,
-  /* Özet: pasta dilimleri + sağ üstte % */
-  gauge: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11.2" cy="12.6" r="7.35" fill="currentColor" fill-opacity=".1" stroke="currentColor" stroke-width="1.55"/><path d="M11.2 5.25a7.35 7.35 0 0 1 7.35 7.35H11.2V5.25Z" fill="currentColor" fill-opacity=".46"/><path d="M11.2 12.6 16.85 16.95A7.35 7.35 0 0 1 11.2 19.95V12.6Z" fill="currentColor" fill-opacity=".24"/><path d="M11.2 12.6 5.55 15.95A7.35 7.35 0 0 1 11.2 5.25v7.35Z" fill="currentColor" fill-opacity=".14"/><circle cx="17.55" cy="4.55" r="1.15" stroke="currentColor" stroke-width="1.35"/><circle cx="20.35" cy="7.35" r="1.15" stroke="currentColor" stroke-width="1.35"/><path d="M16.85 7.95 21.05 3.75" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>`,
-  /* Bakım: açık ağız anahtar × düz tornavida */
-  dipstick: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.2 5.1c1.35 0 2.4.95 2.5 2.25L4.35 9.7C3.05 9.55 2.2 8.45 2.3 7.15A2.85 2.85 0 0 1 4.2 5.1Z" fill="currentColor" fill-opacity=".28" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M6.2 7.7 14.9 16.4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M14.1 15.6 16.05 19.4l2.15-.85-1.05-2.85" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M19.4 4.5 9.2 14.7l-1.45 3.85 3.85-1.45L21.8 7.0" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M17.55 6.35 15.7 8.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M19.95 8.75c.95.2 1.65 1.05 1.65 2.05 0 1.15-.95 2.05-2.1 2.05-.55 0-1.05-.2-1.4-.55" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
-  /* Arıza: motor bloğu + kalkan ! */
-  chassis: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.9 10.1h11.4" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/><path d="M4.2 10.1V7.7h8.8v2.4" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M5 13.7h8.4M5.9 10.1v3.6M9.1 10.1v3.6M12.3 10.1v3.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M5.5 13.7 4.4 16.8M12.9 13.7 14 16.8M6.7 16.8h5.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M3.6 8.35h1.35M12.7 8.35h1.35" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M15.85 12.35h2.55c.95 0 1.75.8 1.75 1.75v2.15c0 .55-.28 1.05-.72 1.35l-2.3 1.35-2.3-1.35a1.6 1.6 0 0 1-.73-1.35v-2.15c0-.95.8-1.75 1.75-1.75Z" fill="currentColor" fill-opacity=".2" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M17.15 14.55v2.15M17.15 17.95v.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-  /* Gizli: kilit gövdesi + sağ alt + rozeti */
-  lock: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4.1" y="9.1" width="11.6" height="9.6" rx="2.4" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.6"/><path d="M7 9.1V6.75a3.7 3.7 0 0 1 7.4 0V9.1" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/><circle cx="9.9" cy="14.1" r="1.25" fill="currentColor" fill-opacity=".5"/><path d="M9.9 15.15v1.85" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/><circle cx="18.35" cy="17.85" r="3.55" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="1.45"/><path d="M18.35 16.05v3.6M16.55 17.85h3.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>`,
-  /* Ekspertiz: pano + üç tik satırı */
-  list: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.3 3.9h9.4A1.85 1.85 0 0 1 18.55 5.75v13.3A1.85 1.85 0 0 1 16.7 20.9H7.3A1.85 1.85 0 0 1 5.45 19.05V5.75A1.85 1.85 0 0 1 7.3 3.9Z" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="1.55"/><path d="M9.2 3.15h5.6c.55 0 1 .45 1 1v.85h-7.6V4.15c0-.55.45-1 1-1Z" fill="currentColor" fill-opacity=".28" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.15 9.55 9.7 11.1 12.85 7.95" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.15 13.85 9.7 15.4 12.85 12.25" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.15 18.15 9.7 19.7 12.85 16.55" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.55 10.35h2.7M14.55 14.65h2.7M14.55 18.95h2.7" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>`,
-  /* Alt nav — referans outline set */
-  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 11.2 12 3.9l8.4 7.3"/><path d="M6.4 10.4V19.2h11.2V10.4"/><path d="M9.8 19.2v-5.5h4.4v5.5"/></svg>`,
-  /* Araçlarım: önden araç silüeti */
-  car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.2 10.4 8.8 7.1h6.4l1.6 3.3"/><path d="M5.4 13.1h13.2"/><path d="M6.2 13.1 5.1 17h13.8l-1.1-3.9"/><path d="M8 17v1.9M16 17v1.9"/><path d="M7.4 13.1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1Z" fill="currentColor"/><path d="M16.6 13.1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1Z" fill="currentColor"/><path d="M9.6 10.4h4.8"/><path d="M10.3 14.85h3.4"/><path d="M6.6 11.55h-1M18.4 11.55h1"/></svg>`,
-  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.2 15.9V10.3a5.8 5.8 0 0 1 11.6 0v5.6"/><path d="M4.8 15.9h14.4"/><path d="M10.2 18.35a1.8 1.8 0 0 0 3.6 0"/></svg>`,
-  chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 18.5h17"/><path d="M5.4 14.2 9.9 9.5l3.4 2.8L19 5.4"/><path d="M15.9 5.4h3.1v3.1"/></svg>`,
-  sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor" fill-opacity=".12"/><path d="M12 3.3v2.35M12 18.35v2.35M4.45 6.75l1.65 1.65M17.9 15.6l1.65 1.65M3.3 12h2.35M18.35 12h2.35M4.45 17.25l1.65-1.65M17.9 8.4l1.65-1.65"/></svg>`,
+  /* logo-icon-reference-new.jpg — üst/alt aksiyon + nav birebir */
+  /* Tara: köşe bracket + yatay tarama kıvrımları */
+  scan: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 3.5H5.2A1.7 1.7 0 0 0 3.5 5.2V8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M16 3.5h2.8A1.7 1.7 0 0 1 20.5 5.2V8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M20.5 16v2.8a1.7 1.7 0 0 1-1.7 1.7H16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M3.5 16v2.8A1.7 1.7 0 0 0 5.2 20.5H8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M7.2 9.2c1.6-.9 3.2-1.35 4.8-1.35s3.2.45 4.8 1.35" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M6.6 12c2-.95 3.9-1.4 5.4-1.4s3.4.45 5.4 1.4" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/><path d="M7.2 14.8c1.6-.85 3.2-1.25 4.8-1.25s3.2.4 4.8 1.25" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M9.4 12h5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  /* Yakıt: tabanca + 3 yaprak */
+  fuel: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8.6 3.6h5.4c1 0 1.8.75 1.95 1.72L17.2 11H7.5l1.05-5.68A2 2 0 0 1 8.6 3.6Z" fill="currentColor" fill-opacity=".15" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M10.6 11v8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M14.1 6.3h1.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M16.3 11.2c.2 1.4.95 2.55 2.15 3.25l1.6 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.8 14.1c1.45-1.5 3.7-1.55 5.15.05.4.45.7 1 .8 1.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M4 17c1.1 1.35 2.85 1.7 4.4 1.05" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5.9 19.5c.75-1.1 2-1.45 3.2-.9" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M8.5 18c.5-.85 1.45-1.15 2.35-.65" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M5.4 16c.6-.95 1.65-1.2 2.6-.65" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/></svg>`,
+  /* Masraf: kart + şerit + çip + çift daire */
+  card: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.8" y="5.4" width="18.4" height="13.2" rx="2.4" fill="currentColor" fill-opacity=".1" stroke="currentColor" stroke-width="1.55"/><path d="M2.8 9.1h18.4" stroke="currentColor" stroke-width="1.75"/><rect x="5" y="11.4" width="3.5" height="2.5" rx=".45" fill="currentColor" fill-opacity=".42"/><circle cx="16.3" cy="16.3" r="1.55" fill="currentColor" fill-opacity=".28" stroke="currentColor" stroke-width="1.1"/><circle cx="18.35" cy="16.55" r="1.55" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.1"/></svg>`,
+  /* Özet: pasta + ayrık dilimde % */
+  gauge: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="12.5" r="7.2" fill="currentColor" fill-opacity=".1" stroke="currentColor" stroke-width="1.55"/><path d="M11 5.3a7.2 7.2 0 0 1 7.2 7.2H11V5.3Z" fill="currentColor" fill-opacity=".48"/><path d="M11 12.5 16.5 16.7A7.2 7.2 0 0 1 11 19.7V12.5Z" fill="currentColor" fill-opacity=".24"/><path d="M11 12.5 5.5 15.7A7.2 7.2 0 0 1 11 5.3v7.2Z" fill="currentColor" fill-opacity=".14"/><circle cx="17.7" cy="4.7" r="1.2" stroke="currentColor" stroke-width="1.35"/><circle cx="20.4" cy="7.4" r="1.2" stroke="currentColor" stroke-width="1.35"/><path d="M16.95 8 21.15 3.8" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>`,
+  /* Bakım: anahtar × tornavida */
+  dipstick: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.1 5c1.4 0 2.45 1 2.55 2.35L4.25 9.75C2.9 9.6 2.05 8.45 2.15 7.1A2.9 2.9 0 0 1 4.1 5Z" fill="currentColor" fill-opacity=".3" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M6.1 7.7 15 16.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14.2 15.8 16.2 19.7l2.2-.9-1.1-2.9" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/><path d="M19.5 4.4 9.1 14.8l-1.5 4 4-1.5L21.9 6.9" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M17.6 6.3 15.7 8.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M20 8.7c1 .2 1.7 1.1 1.7 2.1 0 1.2-1 2.1-2.15 2.1-.55 0-1.05-.2-1.4-.55" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  /* Arıza: motor + kalkan ! */
+  chassis: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.8 10h11.6" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/><path d="M4.1 10V7.5h9v2.5" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M4.9 13.7h8.6M5.8 10v3.7M9.1 10v3.7M12.4 10v3.7" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M5.4 13.7 4.3 16.9M13 13.7l1.1 3.2M6.6 16.9h5.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><path d="M3.5 8.2h1.4M12.8 8.2h1.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M15.9 12.2h2.6c1 0 1.8.8 1.8 1.8v2.2c0 .55-.28 1.05-.75 1.35l-2.35 1.4-2.35-1.4a1.65 1.65 0 0 1-.75-1.35v-2.2c0-1 .8-1.8 1.8-1.8Z" fill="currentColor" fill-opacity=".2" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M17.2 14.5v2.2M17.2 17.95v.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  /* Gizli: kilit + */
+  lock: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="9" width="11.8" height="9.8" rx="2.5" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.6"/><path d="M6.9 9V6.7a3.8 3.8 0 0 1 7.6 0V9" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/><circle cx="9.9" cy="14.1" r="1.3" fill="currentColor" fill-opacity=".5"/><path d="M9.9 15.2v1.9" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/><circle cx="18.4" cy="17.9" r="3.6" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="1.45"/><path d="M18.4 16.1v3.6M16.6 17.9h3.6" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/></svg>`,
+  /* Ekspertiz: pano + tikler */
+  list: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.2 3.8h9.6A1.9 1.9 0 0 1 18.7 5.7v13.5a1.9 1.9 0 0 1-1.9 1.9H7.2a1.9 1.9 0 0 1-1.9-1.9V5.7A1.9 1.9 0 0 1 7.2 3.8Z" fill="currentColor" fill-opacity=".12" stroke="currentColor" stroke-width="1.55"/><path d="M9.1 3h5.8c.55 0 1 .45 1 1v.9H8.1V4c0-.55.45-1 1-1Z" fill="currentColor" fill-opacity=".28" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 9.5 9.6 11.1 12.9 7.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 13.9 9.6 15.5 12.9 12.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 18.3 9.6 19.9 12.9 16.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.6 10.3h2.8M14.6 14.7h2.8M14.6 19.1h2.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>`,
+  /* Nav outline */
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.1 12 3.7l8.5 7.4"/><path d="M6.3 10.3V19h11.4v-8.7"/><path d="M9.7 19v-5.4h4.6V19"/></svg>`,
+  /* Araçlarım: önden araç */
+  car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.1 10.3 8.8 7h6.4l1.7 3.3"/><path d="M5.2 13h13.6"/><path d="M6.1 13 5 17.1h14l-1.1-4.1"/><path d="M8 17.1v1.9M16 17.1v1.9"/><circle cx="7.5" cy="13" r="1" fill="currentColor"/><circle cx="16.5" cy="13" r="1" fill="currentColor"/><path d="M9.5 10.3h5"/><path d="M10.2 14.9h3.6"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.1 15.8V10.2a5.9 5.9 0 0 1 11.8 0v5.6"/><path d="M4.6 15.8h14.8"/><path d="M10.1 18.3a1.9 1.9 0 0 0 3.8 0"/></svg>`,
+  chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 18.6h17.2"/><path d="M5.3 14.3 9.7 9.6l3.5 2.9L19.1 5.3"/><path d="M15.9 5.3h3.2v3.2"/></svg>`,
+  /* Ayarlar: klasik dişli */
+  sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.15" fill="currentColor" fill-opacity=".12"/><path d="M12 3.4v2.1M12 18.5v2.1M4.6 6.9l1.5 1.5M17.9 15.6l1.5 1.5M3.4 12h2.1M18.5 12h2.1M4.6 17.1l1.5-1.5M17.9 8.4l1.5-1.5"/><path d="M9.2 4.6 10 6.3M14 6.3l.8-1.7M19.4 9.2 17.7 10M17.7 14l1.7.8M14.8 19.4 14 17.7M10 17.7l-.8 1.7M4.6 14.8 6.3 14M6.3 10 4.6 9.2"/></svg>`,
   camera: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.2 8.2h2.8l1.35-1.7h7.3l1.35 1.7h2.8a1.1 1.1 0 0 1 1.1 1.1v8.4a1.1 1.1 0 0 1-1.1 1.1H4.2a1.1 1.1 0 0 1-1.1-1.1v-8.4a1.1 1.1 0 0 1 1.1-1.1z"/><circle cx="12" cy="13.2" r="3"/></svg>`,
   bulb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 17.6h5.6"/><path d="M10.2 20.2h3.6"/><path d="M8.2 14.6a5.8 5.8 0 1 1 7.6 0c-.7.7-1.1 1.45-1.2 2.25H9.4c-.1-.8-.5-1.55-1.2-2.25z"/></svg>`,
   chevronLeft: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5"/></svg>`,

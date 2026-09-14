@@ -171,12 +171,12 @@ body {
 }
 
 .hero-card {
-  margin: 0 0.85rem;
+  margin: 0 0.45rem;
   background: #fff;
   border-radius: var(--radius-card);
   position: relative;
   overflow: hidden;
-  min-height: 15.6rem;
+  min-height: clamp(18.5rem, 58vw, 26rem);
   box-shadow: var(--shadow);
 }
 
@@ -184,7 +184,7 @@ body {
   position: relative;
   overflow: hidden;
   padding: 0;
-  height: 15.2rem;
+  height: clamp(18rem, 56vw, 25.5rem);
   cursor: grab;
   touch-action: pan-y;
   outline: none;
@@ -221,11 +221,13 @@ body {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: 0.4rem 0.55rem;
-  object-fit: contain;
-  object-position: center center;
-  transform: none;
-  background: #f3f5f6;
+  padding: 0;
+  /* Letterbox/beyaz kenar yok — cover + scale ile alan doldurur */
+  object-fit: cover;
+  object-position: center 55%;
+  transform: scale(1.12);
+  transform-origin: center center;
+  background: #dfe4e7;
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
