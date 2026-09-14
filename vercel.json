@@ -1,5 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "cleanUrls": false
+  "cleanUrls": false,
+  "rewrites": [
+    {
+      "source": "/api/fuel-national",
+      "destination": "https://ucuzyakitbul.com.tr/api/prices/national"
+    },
+    {
+      "source": "/api/fuel-epdk",
+      "destination": "https://turkpidya.com/wp-json/turkpidya-data/v1/fuel"
+    }
+  ]
 }
