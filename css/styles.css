@@ -220,10 +220,11 @@ body {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  box-sizing: border-box;
+  padding: 0.4rem 0.55rem;
+  object-fit: contain;
   object-position: center center;
-  transform: scale(1.28);
-  transform-origin: center center;
+  transform: none;
   background: #f3f5f6;
   user-select: none;
   -webkit-user-drag: none;

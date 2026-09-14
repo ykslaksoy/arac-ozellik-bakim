@@ -199,21 +199,21 @@ test("OBD pill bağlı değil; halka/overlay yok", () => {
   assert.equal(OBD_PILL.ring, false);
 });
 
-test("Referans ikon şekilleri: scan frame, yakıt nozül, pasta özet", () => {
+test("Referans ikon şekilleri: scan frame+parmak izi, yakıt yaprak, pasta özet", () => {
   assert.equal(HOME_ACTIONS_TOP[0].icon, "scan");
-  assert.match(ICONS.scan, /M8 3\.8H5\.4/);
-  assert.doesNotMatch(ICONS.scan, /circle/);
+  assert.match(ICONS.scan, /M8 3\.6H5\.2/);
+  assert.match(ICONS.scan, /12 7\.2c-2\.1 1\.1-3\.4/);
   assert.match(ICONS.fuel, /fill-opacity="\.16"/);
-  assert.match(ICONS.fuel, /L15\.1 11H6\.9/);
-  assert.match(ICONS.card, /rect x="2\.9"/);
-  assert.match(ICONS.card, /M11\.2 12\.4h6\.4|h6\.4/);
+  assert.match(ICONS.fuel, /8\.2 3\.8h4\.6|L15\.4 10H7\.5/);
+  assert.match(ICONS.card, /rect x="2\.7"/);
+  assert.match(ICONS.card, /M11 12\.4h7|h7M11/);
   assert.match(ICONS.gauge, /%/);
-  assert.match(ICONS.gauge, /M12 4a8 8/);
-  assert.match(ICONS.dipstick, /M14\.2 4\.6 19\.4 9\.8/);
-  assert.match(ICONS.chassis, /M3\.8 10\.3h11\.2/);
-  assert.match(ICONS.chassis, /16\.85 16\.55|17\.7 17\.45|19\.15 15\.85/);
-  assert.match(ICONS.lock, /M18\.1 15\.9v3\.2|h3\.2/);
-  assert.match(ICONS.list, /9\.8 10\.9|12\.5 8\.2/);
+  assert.match(ICONS.gauge, /M12 3\.9a8\.1/);
+  assert.match(ICONS.dipstick, /M14\.4 4\.4 19\.6 9\.6/);
+  assert.match(ICONS.chassis, /M3\.6 10\.2h10\.8/);
+  assert.match(ICONS.chassis, /17\.25 15\.05v2\.1/);
+  assert.match(ICONS.lock, /M18\.2 15\.9v3\.4|h3\.4/);
+  assert.match(ICONS.list, /9\.7 10\.9|12\.6 8/);
   assert.match(ICONS.sliders, /circle cx="12" cy="12"/);
   assert.match(ICONS.chevronLeft, /14\.5 6\.5/);
   assert.match(ICONS.chevronRight, /9\.5 6\.5/);
