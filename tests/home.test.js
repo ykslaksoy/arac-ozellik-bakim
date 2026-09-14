@@ -89,14 +89,14 @@ test("hero galeri: saat yönü ön → yan → arka; varsayılan paneled ön-sa�
   assert.deepEqual(
     DEFAULT_HERO_GALLERY.map((s) => s.src),
     [
-      "assets/hero-megane-front.png",
-      "assets/hero-megane.png",
-      "assets/hero-megane-right.png",
-      "assets/hero-megane-rear-right-q.png",
-      "assets/hero-megane-rear.png",
-      "assets/hero-megane-rear-left-q.png",
-      "assets/hero-megane-left.png",
-      "assets/hero-megane-left-q.png",
+      "assets/orbit-m3-0-front.png",
+      "assets/orbit-m3-1-front-right.png",
+      "assets/orbit-m3-2-right.png",
+      "assets/orbit-m3-3-rear-right.png",
+      "assets/orbit-m3-4-rear.png",
+      "assets/orbit-m3-5-rear-left.png",
+      "assets/orbit-m3-6-left.png",
+      "assets/orbit-m3-7-front-left.png",
     ],
   );
   const srcs = DEFAULT_HERO_GALLERY.map((s) => s.src);
@@ -106,6 +106,23 @@ test("hero galeri: saat yönü ön → yan → arka; varsayılan paneled ön-sa�
   assert.deepEqual(dragRightHeroIds(DEFAULT_HERO_INDEX), [
     "right-side",
     "rear-right-quarter",
+  ]);
+  // Tam saat yönü tur: ön → … → ön-sol → ön
+  const clockwise = [];
+  let i = 0;
+  for (let step = 0; step < 8; step++) {
+    clockwise.push(DEFAULT_HERO_GALLERY[i].id);
+    i = nextHeroIndex(i, 8, 1);
+  }
+  assert.deepEqual(clockwise, [
+    "front",
+    "right-three-quarter",
+    "right-side",
+    "rear-right-quarter",
+    "rear",
+    "rear-left-quarter",
+    "left-side",
+    "left-three-quarter",
   ]);
   assert.equal(nextHeroIndex(0, 8, 1), 1);
   assert.equal(nextHeroIndex(0, 8, -1), 7);
@@ -119,7 +136,7 @@ test("hero galeri: saat yönü ön → yan → arka; varsayılan paneled ön-sa�
   const builtIn = heroSlides({});
   assert.equal(builtIn.length, 8);
   assert.equal(builtIn[DEFAULT_HERO_INDEX], DEFAULT_HERO_SRC);
-  assert.ok(builtIn.every((src) => src.startsWith("assets/hero-megane")));
+  assert.ok(builtIn.every((src) => src.startsWith("assets/orbit-m3-")));
   const looped = loopedHeroSlides(builtIn);
   assert.equal(looped.length, 10);
   assert.equal(looped[0], builtIn[7]);

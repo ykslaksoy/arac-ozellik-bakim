@@ -8,25 +8,28 @@ import {
   toNumber,
 } from "./logic.js";
 
-export const DEFAULT_HERO_SRC = "assets/hero-megane.png";
-/** Repodaki doğru Megane 3 (paneled/segmented kaput, Phase 2 SW). */
+/**
+ * Renault Megane III Phase 2/3 Sport Tourer — parçalı (segmented) ön kaput.
+ * Orbit dosyaları `assets/orbit-m3-*.png` (eski hero-megane-* ile senkron).
+ */
+export const DEFAULT_HERO_SRC = "assets/orbit-m3-1-front-right.png";
 export const DEMO_MEGANE_YEAR = "2012";
 /** Varsayılan: parçalı kaputlu ön-sağ 3/4. */
 export const DEFAULT_HERO_INDEX = 1;
 /**
- * Saat yönü turntable (yukarıdan):
+ * Saat yönü turntable (yukarıdan bakınca):
  * ön → ön-sağ → sağ → arka-sağ → arka → arka-sol → sol → ön-sol → (ön).
  * Sağ ok / sola kaydırma = +1.
  */
 export const DEFAULT_HERO_GALLERY = [
-  { id: "front", src: "assets/hero-megane-front.png" },
-  { id: "right-three-quarter", src: "assets/hero-megane.png" },
-  { id: "right-side", src: "assets/hero-megane-right.png" },
-  { id: "rear-right-quarter", src: "assets/hero-megane-rear-right-q.png" },
-  { id: "rear", src: "assets/hero-megane-rear.png" },
-  { id: "rear-left-quarter", src: "assets/hero-megane-rear-left-q.png" },
-  { id: "left-side", src: "assets/hero-megane-left.png" },
-  { id: "left-three-quarter", src: "assets/hero-megane-left-q.png" },
+  { id: "front", src: "assets/orbit-m3-0-front.png" },
+  { id: "right-three-quarter", src: "assets/orbit-m3-1-front-right.png" },
+  { id: "right-side", src: "assets/orbit-m3-2-right.png" },
+  { id: "rear-right-quarter", src: "assets/orbit-m3-3-rear-right.png" },
+  { id: "rear", src: "assets/orbit-m3-4-rear.png" },
+  { id: "rear-left-quarter", src: "assets/orbit-m3-5-rear-left.png" },
+  { id: "left-side", src: "assets/orbit-m3-6-left.png" },
+  { id: "left-three-quarter", src: "assets/orbit-m3-7-front-left.png" },
 ];
 export const HERO_LEFT_IDS = ["rear-left-quarter", "left-side", "left-three-quarter"];
 export const HERO_ORBIT_IDS = DEFAULT_HERO_GALLERY.map((slide) => slide.id);
