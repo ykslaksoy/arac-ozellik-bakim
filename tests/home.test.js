@@ -201,19 +201,21 @@ test("OBD pill bağlı değil; halka/overlay yok", () => {
 
 test("Referans ikon şekilleri: scan frame+parmak izi, yakıt yaprak, pasta özet", () => {
   assert.equal(HOME_ACTIONS_TOP[0].icon, "scan");
-  assert.match(ICONS.scan, /M8 3\.6H5\.2/);
-  assert.match(ICONS.scan, /12 7\.2c-2\.1 1\.1-3\.4/);
+  assert.match(ICONS.scan, /M7\.8 3\.4H5A1\.6/);
+  assert.match(ICONS.scan, /12 6\.6c-2\.55 1\.15-4\.15|12 6\.9c-2\.35/);
+  assert.match(ICONS.scan, /M9\.2 12\.2h5\.6/);
   assert.match(ICONS.fuel, /fill-opacity="\.16"/);
-  assert.match(ICONS.fuel, /8\.2 3\.8h4\.6|L15\.4 10H7\.5/);
-  assert.match(ICONS.card, /rect x="2\.7"/);
-  assert.match(ICONS.card, /M11 12\.4h7|h7M11/);
-  assert.match(ICONS.gauge, /%/);
-  assert.match(ICONS.gauge, /M12 3\.9a8\.1/);
-  assert.match(ICONS.dipstick, /M14\.4 4\.4 19\.6 9\.6/);
-  assert.match(ICONS.chassis, /M3\.6 10\.2h10\.8/);
-  assert.match(ICONS.chassis, /17\.25 15\.05v2\.1/);
-  assert.match(ICONS.lock, /M18\.2 15\.9v3\.4|h3\.4/);
-  assert.match(ICONS.list, /9\.7 10\.9|12\.6 8/);
+  assert.match(ICONS.fuel, /9\.1 3\.5h5\.2|iki yaprak|6\.05 19\.55/);
+  assert.match(ICONS.card, /M3\.4 7\.1 19\.2 4\.55/);
+  assert.match(ICONS.card, /circle cx="16\.6"/);
+  assert.match(ICONS.gauge, /circle cx="17\.55" cy="4\.55"|21\.05 3\.75/);
+  assert.match(ICONS.gauge, /M11\.2 5\.25a7\.35/);
+  assert.match(ICONS.dipstick, /M4\.2 5\.1c1\.35|M19\.4 4\.5/);
+  assert.match(ICONS.chassis, /M2\.9 10\.1h11\.4/);
+  assert.match(ICONS.chassis, /17\.15 14\.55v2\.15/);
+  assert.match(ICONS.lock, /M18\.35 16\.05v3\.6|h3\.6/);
+  assert.match(ICONS.list, /9\.7 11\.1|12\.85 7\.95/);
+  assert.match(ICONS.car, /M7\.2 10\.4 8\.8 7\.1/);
   assert.match(ICONS.sliders, /circle cx="12" cy="12"/);
   assert.match(ICONS.chevronLeft, /14\.5 6\.5/);
   assert.match(ICONS.chevronRight, /9\.5 6\.5/);
