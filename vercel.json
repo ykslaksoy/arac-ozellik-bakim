@@ -4,12 +4,16 @@
   "cleanUrls": false,
   "rewrites": [
     {
-      "source": "/api/fuel-national",
-      "destination": "https://ucuzyakitbul.com.tr/api/prices/national"
-    },
-    {
       "source": "/api/fuel-epdk",
       "destination": "https://turkpidya.com/wp-json/turkpidya-data/v1/fuel"
+    },
+    {
+      "source": "/api/fuel-opet",
+      "destination": "https://api.opet.com.tr/api/fuelprices/prices?ProvinceCode=34&IncludeAllProducts=true"
+    },
+    {
+      "source": "/api/fuel-tpo",
+      "destination": "https://www.tppd.com.tr/istanbul-akaryakit-fiyatlari"
     }
   ]
 }
