@@ -43,11 +43,11 @@ test("demo garaj: 2 araç, Megane plakası, mock metrikler", () => {
   assert.equal(homeVehicle(state).plaka, HERO_PLATE);
 
   const m = homeMetrics(state, new Date("2026-09-11T12:00:00"));
-  assert.equal(m.fuelCost, 1250);
-  assert.equal(m.fuelLitres, 61.2);
-  assert.equal(m.expenseCost, 2480);
+  assert.equal(m.fuelCost, 5600);
+  assert.equal(m.fuelLitres, 64.2);
+  assert.equal(m.expenseCost, 2830);
   assert.equal(m.expenseCount, 4);
-  assert.equal(Number(m.consumption.toFixed(1)), 6.4);
+  assert.equal(Number(m.consumption.toFixed(1)), 5.7);
   assert.equal(m.lastServiceKm, 12540);
   assert.equal(m.remainingKm, 15000);
   assert.equal(m.vehicleCount, 2);
@@ -57,11 +57,11 @@ test("metrik kartları kilitli mock metinlerini üretir", () => {
   const cards = metricCards(
     homeMetrics(demoState(new Date("2026-09-11")), new Date("2026-09-11")),
   );
-  assert.equal(cards[0].value, "1.250 TL");
-  assert.equal(cards[0].hint, "61,2 L");
-  assert.equal(cards[1].value, "2.480 TL");
+  assert.equal(cards[0].value, "5.600 TL");
+  assert.equal(cards[0].hint, "64,2 L");
+  assert.equal(cards[1].value, "2.830 TL");
   assert.equal(cards[1].hint, "4 işlem");
-  assert.equal(cards[2].value, "6,4 L");
+  assert.equal(cards[2].value, "5,7 L");
   assert.equal(cards[2].hint, "Uzun dönem");
   assert.equal(cards[3].value, "12.540 km");
   assert.equal(cards[3].hint, "15.000 kaldı");
@@ -166,17 +166,19 @@ test("OBD pill bağlı değil; halka/overlay yok", () => {
 
 test("Referans ikon şekilleri: scan frame, yakıt nozül, pasta özet", () => {
   assert.equal(HOME_ACTIONS_TOP[0].icon, "scan");
-  assert.match(ICONS.scan, /M7\.2 4\.2H5\.2/);
-  assert.match(ICONS.scan, /M8\.2 12h7\.6/);
-  assert.doesNotMatch(ICONS.scan, /circle cx="12"/);
+  assert.match(ICONS.scan, /M8 3\.8H5\.4/);
+  assert.doesNotMatch(ICONS.scan, /circle/);
   assert.match(ICONS.fuel, /fill-opacity="\.16"/);
-  assert.match(ICONS.fuel, /M10\.4 10\.2v7\.2/);
-  assert.match(ICONS.card, /circle cx="17\.4"/);
-  assert.match(ICONS.gauge, /M16\.8 5\.1v2\.1/);
-  assert.match(ICONS.dipstick, /M8\.4 16\.2/);
-  assert.match(ICONS.chassis, /M16\.4 14\.2/);
-  assert.match(ICONS.lock, /M18 15\.9v3/);
-  assert.match(ICONS.list, /M8\.8 10 10 11\.2/);
+  assert.match(ICONS.fuel, /L15\.1 11H6\.9/);
+  assert.match(ICONS.card, /rect x="2\.9"/);
+  assert.match(ICONS.card, /M11\.2 12\.4h6\.4|h6\.4/);
+  assert.match(ICONS.gauge, /%/);
+  assert.match(ICONS.gauge, /M12 4a8 8/);
+  assert.match(ICONS.dipstick, /M14\.2 4\.6 19\.4 9\.8/);
+  assert.match(ICONS.chassis, /M3\.8 10\.3h11\.2/);
+  assert.match(ICONS.chassis, /16\.85 16\.55|17\.7 17\.45|19\.15 15\.85/);
+  assert.match(ICONS.lock, /M18\.1 15\.9v3\.2|h3\.2/);
+  assert.match(ICONS.list, /9\.8 10\.9|12\.5 8\.2/);
   assert.match(ICONS.sliders, /circle cx="12" cy="12"/);
   assert.match(ICONS.chevronLeft, /14\.5 6\.5/);
   assert.match(ICONS.chevronRight, /9\.5 6\.5/);

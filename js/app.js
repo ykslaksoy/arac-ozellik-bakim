@@ -39,6 +39,11 @@ import {
   tabActive,
   userHeroPhotos,
 } from "./home.js";
+import {
+  applyPumpPricesToDemoFuels,
+  formatPumpHint,
+  loadFuelPrices,
+} from "./fuelPrices.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
 const BAKIM_TUR = [
@@ -57,6 +62,8 @@ let editId = null;
 let heroSlideIndex = DEFAULT_HERO_INDEX;
 let filterVehicleId = "";
 let filterMonth = currentYearMonth();
+/** @type {import("./fuelPrices.js").FALLBACK_FUEL_PRICES | null} */
+let pumpPrices = null;
 
 const app = document.getElementById("app");
 const dialog = document.getElementById("formDialog");
@@ -66,6 +73,21 @@ const dialogFields = document.getElementById("dialogFields");
 const tabbar = document.getElementById("tabbar");
 
 maybeSeedDemo(state, saveState);
+
+async function refreshLiveFuelPrices({ force = false } = {}) {
+  try {
+    const prices = await loadFuelPrices({ force });
+    pumpPrices = prices;
+    const next = applyPumpPricesToDemoFuels(state, prices);
+    if (next !== state) {
+      state.fuels = next.fuels;
+      persist();
+    }
+    if (currentPath() === "/") route();
+  } catch {
+    /* fallback seed rakamları kalsın */
+  }
+}
 
 function persist() {
   saveState(state);
@@ -373,7 +395,9 @@ function persistVehiclePatch(id, patch) {
 
 function renderHome() {
   const vehicle = homeVehicle(state);
-  const cards = metricCards(homeMetrics(state));
+  const cards = metricCards(homeMetrics(state), {
+    pumpHint: formatPumpHint(pumpPrices),
+  });
   const showHint = localStorage.getItem(HINT_KEY) !== "1";
   const slides = heroSlides(vehicle);
   heroSlideIndex = clampHeroIndex(heroSlideIndex, slides.length);
@@ -1526,3 +1550,4 @@ form.addEventListener("submit", (e) => {
 
 window.addEventListener("hashchange", route);
 route();
+refreshLiveFuelPrices();
