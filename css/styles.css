@@ -222,12 +222,12 @@ body {
   height: 100%;
   box-sizing: border-box;
   padding: 0;
-  /* Letterbox/beyaz kenar yok — cover + scale ile alan doldurur */
+  /* Letterbox/beyaz kenar yok — cover + scale ile alanı doldur */
   object-fit: cover;
-  object-position: center 55%;
-  transform: scale(1.12);
+  object-position: center 52%;
+  transform: scale(1.22);
   transform-origin: center center;
-  background: #dfe4e7;
+  background: #cfd5d8;
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;

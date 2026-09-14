@@ -180,10 +180,26 @@ export function demoState(now = new Date()) {
   };
 }
 
+/** Bump when demo fuel/orbit defaults must replace stale localStorage. */
+export const DEMO_SEED_REV = 3;
+export const DEMO_SEED_REV_KEY = "aob-demo-seed-rev";
+
 export function maybeSeedDemo(state, persistFn) {
-  if (state.vehicles.length) return state;
+  let rev = 0;
+  try {
+    rev = Number(localStorage.getItem(DEMO_SEED_REV_KEY) || 0) || 0;
+  } catch {
+    rev = 0;
+  }
+  const needsReseed = !state.vehicles.length || rev < DEMO_SEED_REV;
+  if (!needsReseed) return state;
   const seeded = demoState();
   Object.assign(state, seeded);
+  try {
+    localStorage.setItem(DEMO_SEED_REV_KEY, String(DEMO_SEED_REV));
+  } catch {
+    /* ignore */
+  }
   persistFn?.(state);
   return state;
 }
