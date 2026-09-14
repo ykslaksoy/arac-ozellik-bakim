@@ -9,31 +9,61 @@ import {
 } from "./logic.js";
 
 /**
- * Renault Megane III Phase 2/3 Sport Tourer — parçalı (segmented) ön kaput.
+ * Renault Megane III Sport Tourer — parçalı kaput, plaka 34 MKB 421.
  * Orbit dosyaları `assets/orbit-m3-*.png` (eski hero-megane-* ile senkron).
  */
-export const DEFAULT_HERO_SRC = "assets/orbit-m3-1-front-right.png";
 export const DEMO_MEGANE_YEAR = "2012";
-/** Varsayılan: parçalı kaputlu ön-sağ 3/4. */
-export const DEFAULT_HERO_INDEX = 1;
 /**
- * Saat yönü turntable (yukarıdan bakınca):
- * ön → ön-sağ → sağ → arka-sağ → arka → arka-sol → sol → ön-sol → (ön).
+ * Saat yönünün tersi turntable (yukarıdan bakınca):
+ * 1 ön → 2 sol çapraz → 3 sol → 4 sol arka çapraz → 5 arka →
+ * 6 arka sağ çapraz → 7 sağ → 8 sağ ön çapraz → (ön).
  * Sağ ok / sola kaydırma = +1.
  */
 export const DEFAULT_HERO_GALLERY = [
-  { id: "front", src: "assets/orbit-m3-0-front.png" },
-  { id: "right-three-quarter", src: "assets/orbit-m3-1-front-right.png" },
-  { id: "right-side", src: "assets/orbit-m3-2-right.png" },
-  { id: "rear-right-quarter", src: "assets/orbit-m3-3-rear-right.png" },
-  { id: "rear", src: "assets/orbit-m3-4-rear.png" },
-  { id: "rear-left-quarter", src: "assets/orbit-m3-5-rear-left.png" },
-  { id: "left-side", src: "assets/orbit-m3-6-left.png" },
-  { id: "left-three-quarter", src: "assets/orbit-m3-7-front-left.png" },
+  { id: "front", src: "assets/orbit-m3-0-front.png", label: "Önden", guide: "Tam karşıdan çekim" },
+  {
+    id: "left-three-quarter",
+    src: "assets/orbit-m3-1-front-left.png",
+    label: "Sol çapraz",
+    guide: "Ön-sol 45°",
+  },
+  { id: "left-side", src: "assets/orbit-m3-2-left.png", label: "Soldan", guide: "Tam sol profil" },
+  {
+    id: "rear-left-quarter",
+    src: "assets/orbit-m3-3-rear-left.png",
+    label: "Sol arka çapraz",
+    guide: "Arka-sol 45°",
+  },
+  { id: "rear", src: "assets/orbit-m3-4-rear.png", label: "Arkadan", guide: "Tam arkadan çekim" },
+  {
+    id: "rear-right-quarter",
+    src: "assets/orbit-m3-5-rear-right.png",
+    label: "Arka sağ çapraz",
+    guide: "Arka-sağ 45°",
+  },
+  { id: "right-side", src: "assets/orbit-m3-6-right.png", label: "Sağdan", guide: "Tam sağ profil" },
+  {
+    id: "right-three-quarter",
+    src: "assets/orbit-m3-7-front-right.png",
+    label: "Sağ ön çapraz",
+    guide: "Ön-sağ 45°",
+  },
 ];
+export const ORBIT_SLOT_COUNT = DEFAULT_HERO_GALLERY.length;
+/** Varsayılan: kullanıcı referansı (sol çapraz). */
+export const DEFAULT_HERO_INDEX = 1;
+export const DEFAULT_HERO_SRC = DEFAULT_HERO_GALLERY[DEFAULT_HERO_INDEX].src;
 export const HERO_LEFT_IDS = ["rear-left-quarter", "left-side", "left-three-quarter"];
 export const HERO_ORBIT_IDS = DEFAULT_HERO_GALLERY.map((slide) => slide.id);
 export const HERO_PLATE = "34 MKB 421";
+export const ORBIT_SLOTS = DEFAULT_HERO_GALLERY.map((slide, index) => ({
+  index,
+  id: slide.id,
+  label: `${index + 1} · ${slide.label}`,
+  shortLabel: slide.label,
+  guide: slide.guide,
+  src: slide.src,
+}));
 export const HINT_KEY = "aob-rotate-hint";
 export const OBD_PILL = {
   connected: false,
@@ -147,6 +177,70 @@ export function maybeSeedDemo(state, persistFn) {
   return state;
 }
 
+export function isMegane3Vehicle(vehicle) {
+  if (!vehicle) return false;
+  if (vehicle.id === "demo-megane" || vehicle.plaka === HERO_PLATE) return true;
+  const blob = `${vehicle.marka || ""} ${vehicle.model || ""}`
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  return /megane\s*(3|iii)/.test(blob);
+}
+
+/** 8 slotluk orbit dizisi (boş string = eksik). */
+export function normalizeOrbitSlots(vehicle) {
+  const raw = Array.isArray(vehicle?.orbit) ? vehicle.orbit : [];
+  return Array.from({ length: ORBIT_SLOT_COUNT }, (_, i) => {
+    const src = raw[i];
+    return typeof src === "string" && src ? src : "";
+  });
+}
+
+export function orbitFillStatus(slots) {
+  const list = Array.isArray(slots) ? slots : normalizeOrbitSlots({ orbit: slots });
+  const emptyIndexes = [];
+  let filled = 0;
+  for (let i = 0; i < ORBIT_SLOT_COUNT; i++) {
+    if (list[i]) filled += 1;
+    else emptyIndexes.push(i);
+  }
+  return {
+    filled,
+    missing: ORBIT_SLOT_COUNT - filled,
+    complete: filled === ORBIT_SLOT_COUNT,
+    emptyIndexes,
+    excess: Math.max(0, list.length - ORBIT_SLOT_COUNT),
+  };
+}
+
+/** Tam 8 açı yoksa hata mesajı; fazla öğe de reddedilir. */
+export function validateOrbitSlots(slots, { allowEmpty = false } = {}) {
+  const list = Array.isArray(slots) ? [...slots] : [];
+  if (list.length > ORBIT_SLOT_COUNT) {
+    return {
+      ok: false,
+      message: `En fazla ${ORBIT_SLOT_COUNT} fotoğraf. ${list.length - ORBIT_SLOT_COUNT} fazla seçildi.`,
+    };
+  }
+  const normalized = Array.from({ length: ORBIT_SLOT_COUNT }, (_, i) => list[i] || "");
+  const status = orbitFillStatus(normalized);
+  if (status.complete) {
+    return { ok: true, message: `${ORBIT_SLOT_COUNT} açı hazır`, slots: normalized, status };
+  }
+  if (allowEmpty && status.filled === 0) {
+    return { ok: true, message: "Varsayılan orbit", slots: normalized, status };
+  }
+  const missingLabels = status.emptyIndexes
+    .map((i) => ORBIT_SLOTS[i]?.shortLabel || `${i + 1}`)
+    .join(", ");
+  return {
+    ok: false,
+    message: `${status.missing} açı eksik (adet ${ORBIT_SLOT_COUNT} olmalı): ${missingLabels}`,
+    slots: normalized,
+    status,
+  };
+}
+
 export function userHeroPhotos(vehicle) {
   const extras = [];
   if (vehicle?.foto) extras.push(vehicle.foto);
@@ -158,8 +252,19 @@ export function userHeroPhotos(vehicle) {
   return [...new Set(extras)];
 }
 
+/**
+ * Megane III → yerleşik 8 açı otomatik.
+ * Kullanıcı orbit’i tam 8 ise onu kullanır; kısmi set orbit’e geçmez.
+ */
 export function heroSlides(vehicle) {
-  return [...DEFAULT_HERO_GALLERY.map((slide) => slide.src), ...userHeroPhotos(vehicle)];
+  const custom = normalizeOrbitSlots(vehicle);
+  if (orbitFillStatus(custom).complete) return custom;
+  if (isMegane3Vehicle(vehicle) || !vehicle) {
+    return DEFAULT_HERO_GALLERY.map((slide) => slide.src);
+  }
+  const legacy = userHeroPhotos(vehicle);
+  if (legacy.length) return legacy;
+  return [];
 }
 
 /** First/last clones so wrap-around never shows an empty frame. */

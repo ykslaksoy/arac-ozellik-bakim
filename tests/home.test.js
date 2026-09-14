@@ -10,6 +10,8 @@ import {
   HOME_ACTIONS_TOP,
   ICONS,
   OBD_PILL,
+  ORBIT_SLOT_COUNT,
+  ORBIT_SLOTS,
   TAB_ITEMS,
   demoState,
   formatKm,
@@ -24,6 +26,7 @@ import {
   heroSlides,
   heroTrackOffset,
   heroVisualIndex,
+  isMegane3Vehicle,
   loopedHeroSlides,
   nextHeroIndex,
   dragRightHeroIds,
@@ -31,7 +34,10 @@ import {
   homeVehicle,
   maybeSeedDemo,
   metricCards,
+  normalizeOrbitSlots,
+  orbitFillStatus,
   tabActive,
+  validateOrbitSlots,
 } from "../js/home.js";
 
 test("demo garaj: 2 araç, Megane plakası, mock metrikler", () => {
@@ -41,6 +47,8 @@ test("demo garaj: 2 araç, Megane plakası, mock metrikler", () => {
   assert.equal(state.vehicles[0].yil, DEMO_MEGANE_YEAR);
   assert.equal(DEMO_MEGANE_YEAR, "2012");
   assert.equal(homeVehicle(state).plaka, HERO_PLATE);
+  assert.equal(isMegane3Vehicle(state.vehicles[0]), true);
+  assert.equal(isMegane3Vehicle(state.vehicles[1]), false);
 
   const m = homeMetrics(state, new Date("2026-09-11T12:00:00"));
   assert.equal(m.fuelCost, 5600);
@@ -73,67 +81,79 @@ test("hero: model/yıl/motor/EDC yazısı yok, varsayılan Megane görseli", () 
   assert.equal(heroImageSrc({}, DEFAULT_HERO_INDEX), DEFAULT_HERO_SRC);
 });
 
-test("hero galeri: saat yönü ön → yan → arka; varsayılan paneled ön-sağ", () => {
+test("hero galeri: sol dönüş ön → sol çapraz → … → sağ ön; Megane otomatik", () => {
+  assert.equal(ORBIT_SLOT_COUNT, 8);
+  assert.equal(ORBIT_SLOTS.length, 8);
   assert.equal(DEFAULT_HERO_INDEX, 1);
   assert.equal(DEFAULT_HERO_GALLERY[DEFAULT_HERO_INDEX].src, DEFAULT_HERO_SRC);
+  assert.equal(DEFAULT_HERO_SRC, "assets/orbit-m3-1-front-left.png");
   assert.deepEqual(HERO_ORBIT_IDS, [
     "front",
-    "right-three-quarter",
-    "right-side",
-    "rear-right-quarter",
-    "rear",
-    "rear-left-quarter",
-    "left-side",
     "left-three-quarter",
+    "left-side",
+    "rear-left-quarter",
+    "rear",
+    "rear-right-quarter",
+    "right-side",
+    "right-three-quarter",
   ]);
   assert.deepEqual(
     DEFAULT_HERO_GALLERY.map((s) => s.src),
     [
       "assets/orbit-m3-0-front.png",
-      "assets/orbit-m3-1-front-right.png",
-      "assets/orbit-m3-2-right.png",
-      "assets/orbit-m3-3-rear-right.png",
+      "assets/orbit-m3-1-front-left.png",
+      "assets/orbit-m3-2-left.png",
+      "assets/orbit-m3-3-rear-left.png",
       "assets/orbit-m3-4-rear.png",
-      "assets/orbit-m3-5-rear-left.png",
-      "assets/orbit-m3-6-left.png",
-      "assets/orbit-m3-7-front-left.png",
+      "assets/orbit-m3-5-rear-right.png",
+      "assets/orbit-m3-6-right.png",
+      "assets/orbit-m3-7-front-right.png",
+    ],
+  );
+  assert.deepEqual(
+    ORBIT_SLOTS.map((s) => s.shortLabel),
+    [
+      "Önden",
+      "Sol çapraz",
+      "Soldan",
+      "Sol arka çapraz",
+      "Arkadan",
+      "Arka sağ çapraz",
+      "Sağdan",
+      "Sağ ön çapraz",
     ],
   );
   const srcs = DEFAULT_HERO_GALLERY.map((s) => s.src);
   assert.equal(new Set(srcs).size, 8);
   assert.ok(HERO_LEFT_IDS.every((id) => HERO_ORBIT_IDS.includes(id)));
-  // +1 from default (ön-sağ) → sağ yan → arka-sağ
+  // +1 from default (sol çapraz) → sol → sol arka
   assert.deepEqual(dragRightHeroIds(DEFAULT_HERO_INDEX), [
-    "right-side",
-    "rear-right-quarter",
+    "left-side",
+    "rear-left-quarter",
   ]);
-  // Tam saat yönü tur: ön → … → ön-sol → ön
-  const clockwise = [];
+  const tour = [];
   let i = 0;
   for (let step = 0; step < 8; step++) {
-    clockwise.push(DEFAULT_HERO_GALLERY[i].id);
+    tour.push(DEFAULT_HERO_GALLERY[i].id);
     i = nextHeroIndex(i, 8, 1);
   }
-  assert.deepEqual(clockwise, [
-    "front",
-    "right-three-quarter",
-    "right-side",
-    "rear-right-quarter",
-    "rear",
-    "rear-left-quarter",
-    "left-side",
-    "left-three-quarter",
-  ]);
+  assert.deepEqual(tour, HERO_ORBIT_IDS);
   assert.equal(nextHeroIndex(0, 8, 1), 1);
   assert.equal(nextHeroIndex(0, 8, -1), 7);
   assert.equal(nextHeroIndex(7, 8, 1), 0);
   assert.equal(DEFAULT_HERO_GALLERY[0].id, "front");
-  assert.equal(DEFAULT_HERO_GALLERY[1].id, "right-three-quarter");
-  assert.equal(DEFAULT_HERO_GALLERY[2].id, "right-side");
+  assert.equal(DEFAULT_HERO_GALLERY[1].id, "left-three-quarter");
+  assert.equal(DEFAULT_HERO_GALLERY[2].id, "left-side");
   assert.equal(DEFAULT_HERO_GALLERY[4].id, "rear");
-  assert.equal(DEFAULT_HERO_GALLERY[7].id, "left-three-quarter");
+  assert.equal(DEFAULT_HERO_GALLERY[7].id, "right-three-quarter");
 
-  const builtIn = heroSlides({});
+  const megane = {
+    id: "demo-megane",
+    plaka: HERO_PLATE,
+    marka: "Renault",
+    model: "Megane 3 SW",
+  };
+  const builtIn = heroSlides(megane);
   assert.equal(builtIn.length, 8);
   assert.equal(builtIn[DEFAULT_HERO_INDEX], DEFAULT_HERO_SRC);
   assert.ok(builtIn.every((src) => src.startsWith("assets/orbit-m3-")));
@@ -146,15 +166,29 @@ test("hero galeri: saat yönü ön → yan → arka; varsayılan paneled ön-sa�
   assert.equal(heroTrackOffset(0, 8), -100);
   assert.equal(heroTrackOffset(1, 8), -200);
 
-  const withUser = heroSlides({
-    foto: "data:image/jpeg;base64,aa",
-    fotos: ["data:image/jpeg;base64,bb"],
-  });
-  assert.equal(withUser.length, 10);
-  assert.equal(withUser[8], "data:image/jpeg;base64,aa");
-  assert.equal(withUser[9], "data:image/jpeg;base64,bb");
+  const custom = Array.from({ length: 8 }, (_, n) => `data:image/jpeg;base64,c${n}`);
+  const withOrbit = heroSlides({ ...megane, orbit: custom });
+  assert.deepEqual(withOrbit, custom);
+  const partial = heroSlides({ ...megane, orbit: custom.slice(0, 3) });
+  assert.deepEqual(partial, builtIn);
   assert.equal(clampHeroIndex(-1, 8), 7);
-  assert.equal(heroImageSrc({ foto: "data:image/jpeg;base64,xx" }, 8), "data:image/jpeg;base64,xx");
+
+  const clio = { marka: "Renault", model: "Clio" };
+  assert.deepEqual(heroSlides(clio), []);
+  assert.deepEqual(
+    heroSlides({ ...clio, foto: "data:image/jpeg;base64,xx" }),
+    ["data:image/jpeg;base64,xx"],
+  );
+});
+
+test("orbit yükleme: tam 8 gerekli, eksik/fazla reddedilir", () => {
+  assert.equal(normalizeOrbitSlots({}).length, 8);
+  assert.equal(orbitFillStatus(normalizeOrbitSlots({})).missing, 8);
+  const eight = Array.from({ length: 8 }, (_, i) => `img-${i}`);
+  assert.equal(validateOrbitSlots(eight).ok, true);
+  assert.match(validateOrbitSlots(eight.slice(0, 5)).message, /3 açı eksik/);
+  assert.match(validateOrbitSlots([...eight, "extra"]).message, /fazla/);
+  assert.equal(validateOrbitSlots([], { allowEmpty: true }).ok, true);
 });
 
 test("OBD pill bağlı değil; halka/overlay yok", () => {

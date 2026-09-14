@@ -25,6 +25,8 @@ import {
   HINT_KEY,
   HOME_ACTIONS_BOTTOM,
   HOME_ACTIONS_TOP,
+  ORBIT_SLOT_COUNT,
+  ORBIT_SLOTS,
   TAB_ITEMS,
   clampHeroIndex,
   heroImageSrc,
@@ -33,11 +35,15 @@ import {
   homeMetrics,
   homeVehicle,
   iconSvg,
+  isMegane3Vehicle,
   loopedHeroSlides,
   maybeSeedDemo,
   metricCards,
+  normalizeOrbitSlots,
+  orbitFillStatus,
   tabActive,
   userHeroPhotos,
+  validateOrbitSlots,
 } from "./home.js";
 import {
   applyPumpPricesToDemoFuels,
@@ -393,6 +399,164 @@ function persistVehiclePatch(id, patch) {
   persist();
 }
 
+function paintOrbitStatus(elStatus, slots) {
+  const check = validateOrbitSlots(slots, { allowEmpty: true });
+  const status = check.status || orbitFillStatus(slots);
+  elStatus.textContent = status.complete
+    ? `Hazır · ${ORBIT_SLOT_COUNT}/${ORBIT_SLOT_COUNT} açı`
+    : status.filled === 0
+      ? `Megane III varsayılan orbit · ${ORBIT_SLOT_COUNT} açı yükleyerek değiştirin`
+      : check.message;
+  elStatus.className = `orbit-status${status.complete ? " is-ok" : status.filled ? " is-warn" : ""}`;
+}
+
+function openOrbitUpload(vehicle) {
+  dialogMode = "orbit";
+  editId = vehicle.id;
+  const slots = normalizeOrbitSlots(vehicle);
+  dialogTitle.textContent = "Orbit fotoğrafları (8 açı)";
+  const saveBtn = document.getElementById("dialogSave");
+  if (saveBtn) saveBtn.textContent = "Uygula";
+
+  const statusEl = el("p", { className: "orbit-status" });
+  paintOrbitStatus(statusEl, slots);
+
+  const grid = el("div", { className: "orbit-slot-grid" });
+
+  const refreshSlot = (index) => {
+    const card = grid.children[index];
+    if (!card) return;
+    const preview = card.querySelector(".orbit-slot-preview");
+    const src = slots[index];
+    preview.replaceChildren();
+    if (src) {
+      preview.append(el("img", { src, alt: ORBIT_SLOTS[index].shortLabel }));
+      card.classList.add("is-filled");
+    } else {
+      preview.append(el("span", { className: "orbit-slot-empty", text: "Yükle" }));
+      card.classList.remove("is-filled");
+    }
+    paintOrbitStatus(statusEl, slots);
+  };
+
+  for (const slot of ORBIT_SLOTS) {
+    const card = el("div", {
+      className: `orbit-slot${slots[slot.index] ? " is-filled" : ""}`,
+      "data-orbit-index": String(slot.index),
+    });
+    const preview = el("div", { className: "orbit-slot-preview" });
+    if (slots[slot.index]) {
+      preview.append(el("img", { src: slots[slot.index], alt: slot.shortLabel }));
+    } else {
+      preview.append(el("span", { className: "orbit-slot-empty", text: "Yükle" }));
+    }
+    const file = el("input", {
+      type: "file",
+      accept: "image/*",
+      className: "orbit-slot-input",
+      "aria-label": slot.label,
+    });
+    file.addEventListener("change", async (e) => {
+      const files = [...(e.target.files || [])];
+      e.target.value = "";
+      if (!files.length) return;
+      if (files.length > 1) {
+        alert(`Bu slota tek fotoğraf. Toplu yükleme için “8’ini birden seç” kullanın.`);
+        return;
+      }
+      const dataUrl = await readCompressedPhoto(files[0]);
+      if (!dataUrl) return;
+      slots[slot.index] = dataUrl;
+      refreshSlot(slot.index);
+    });
+    const clear = el("button", {
+      type: "button",
+      className: "orbit-slot-clear",
+      text: "Sil",
+      onClick: () => {
+        slots[slot.index] = "";
+        refreshSlot(slot.index);
+      },
+    });
+    card.append(
+      el("div", { className: "orbit-slot-meta" }, [
+        el("strong", { text: slot.label }),
+        el("span", { text: slot.guide }),
+      ]),
+      preview,
+      el("div", { className: "orbit-slot-actions" }, [
+        el("label", { className: "btn btn-ghost btn-sm orbit-slot-pick" }, ["Seç", file]),
+        clear,
+      ]),
+    );
+    grid.append(card);
+  }
+
+  const bulk = el("input", {
+    type: "file",
+    accept: "image/*",
+    multiple: "true",
+    className: "orbit-bulk-input",
+  });
+  bulk.addEventListener("change", async (e) => {
+    const files = [...(e.target.files || [])];
+    e.target.value = "";
+    if (!files.length) return;
+    if (files.length > ORBIT_SLOT_COUNT) {
+      alert(
+        `En fazla ${ORBIT_SLOT_COUNT} fotoğraf. ${files.length - ORBIT_SLOT_COUNT} fazla seçildi.`,
+      );
+      return;
+    }
+    if (files.length !== ORBIT_SLOT_COUNT) {
+      alert(
+        `Tam ${ORBIT_SLOT_COUNT} fotoğraf seçin (sıra: ön → sol çapraz → … → sağ ön çapraz). Şu an ${files.length} seçili.`,
+      );
+      return;
+    }
+    for (let i = 0; i < ORBIT_SLOT_COUNT; i++) {
+      const dataUrl = await readCompressedPhoto(files[i]);
+      if (!dataUrl) {
+        alert(`${i + 1}. fotoğraf okunamadı.`);
+        return;
+      }
+      slots[i] = dataUrl;
+      refreshSlot(i);
+    }
+  });
+
+  const tools = el("div", { className: "orbit-tools" }, [
+    el("label", { className: "btn btn-ghost" }, [
+      "8’ini birden seç",
+      bulk,
+    ]),
+    el("button", {
+      type: "button",
+      className: "btn btn-ghost",
+      text: isMegane3Vehicle(vehicle) ? "Megane varsayılanına dön" : "Orbit’i temizle",
+      onClick: () => {
+        for (let i = 0; i < ORBIT_SLOT_COUNT; i++) slots[i] = "";
+        for (let i = 0; i < ORBIT_SLOT_COUNT; i++) refreshSlot(i);
+        persistVehiclePatch(vehicle.id, { orbit: [], foto: "", fotos: [] });
+        heroSlideIndex = DEFAULT_HERO_INDEX;
+      },
+    }),
+  ]);
+
+  dialogFields.replaceChildren(
+    el("p", {
+      className: "orbit-help",
+      text: "Sıra zorunlu: 1 ön, 2 sol çapraz, 3 sol, 4 sol arka çapraz, 5 arka, 6 arka sağ çapraz, 7 sağ, 8 sağ ön çapraz. Uygulamak için tam 8 fotoğraf gerekir.",
+    }),
+    statusEl,
+    tools,
+    grid,
+  );
+  // stash working slots on dialog for submit
+  dialogFields._orbitSlots = slots;
+  dialog.showModal();
+}
+
 function renderHome() {
   const vehicle = homeVehicle(state);
   const cards = metricCards(homeMetrics(state), {
@@ -400,20 +564,32 @@ function renderHome() {
   });
   const showHint = localStorage.getItem(HINT_KEY) !== "1";
   const slides = heroSlides(vehicle);
-  heroSlideIndex = clampHeroIndex(heroSlideIndex, slides.length);
+  heroSlideIndex = clampHeroIndex(heroSlideIndex, slides.length || 1);
 
   const track = el("div", { className: "hero-track" });
-  for (const src of loopedHeroSlides(slides)) {
-    const slide = el("div", { className: "hero-slide" });
+  const looped = loopedHeroSlides(slides);
+  if (!looped.length) {
+    const slide = el("div", { className: "hero-slide hero-slide-empty" });
     slide.append(
-      el("img", {
-        className: "hero-photo",
-        src,
-        alt: "",
-        draggable: "false",
+      el("p", {
+        className: "hero-empty",
+        text: "8 açı fotoğrafı yükleyin (Foto)",
       }),
     );
     track.append(slide);
+  } else {
+    for (const src of looped) {
+      const slide = el("div", { className: "hero-slide" });
+      slide.append(
+        el("img", {
+          className: "hero-photo",
+          src,
+          alt: "",
+          draggable: "false",
+        }),
+      );
+      track.append(slide);
+    }
   }
 
   const prevBtn = el("button", {
@@ -466,24 +642,18 @@ function renderHome() {
   prevBtn.addEventListener("click", goPrev);
   nextBtn.addEventListener("click", goNext);
 
-  const foto = el("label", { className: "foto-chip" });
+  const foto = el("button", {
+    type: "button",
+    className: "foto-chip",
+    "aria-label": "Orbit fotoğraflarını yükle",
+  });
   foto.innerHTML = `${iconSvg("camera")}<span>Foto</span>`;
-  foto.append(
-    el("input", {
-      type: "file",
-      accept: "image/*",
-      onChange: async (e) => {
-        const dataUrl = await readCompressedPhoto(e.target.files?.[0]);
-        e.target.value = "";
-        if (!dataUrl || !vehicle) return;
-        const fotos = userHeroPhotos(vehicle).filter((src) => src !== dataUrl);
-        fotos.push(dataUrl);
-        persistVehiclePatch(vehicle.id, { foto: dataUrl, fotos });
-        heroSlideIndex = heroSlides({ ...vehicle, foto: dataUrl, fotos }).length - 1;
-        route();
-      },
-    }),
-  );
+  foto.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!vehicle) return;
+    openOrbitUpload(vehicle);
+  });
 
   const hero = el("section", { className: "hero-card" }, [
     stage,
@@ -1293,6 +1463,8 @@ function openVehicleForm(vehicle) {
   dialogMode = "vehicle";
   editId = vehicle?.id || null;
   dialogTitle.textContent = vehicle ? "Aracı düzenle" : "Yeni araç";
+  const saveBtn = document.getElementById("dialogSave");
+  if (saveBtn) saveBtn.textContent = "Kaydet";
   dialogFields.replaceChildren(
     el("div", { className: "form-grid" }, [
       plateField(vehicle?.plaka || ""),
@@ -1419,9 +1591,36 @@ form.addEventListener("submit", (e) => {
   if (!submitter || submitter.value !== "save") {
     dialogMode = null;
     editId = null;
+    const saveBtn = document.getElementById("dialogSave");
+    if (saveBtn) saveBtn.textContent = "Kaydet";
     return;
   }
   e.preventDefault();
+
+  if (dialogMode === "orbit") {
+    const slots = dialogFields._orbitSlots || normalizeOrbitSlots({});
+    const check = validateOrbitSlots(slots);
+    if (!check.ok) {
+      alert(check.message);
+      return;
+    }
+    const vehicleId = editId;
+    persistVehiclePatch(vehicleId, {
+      orbit: check.slots,
+      foto: check.slots[DEFAULT_HERO_INDEX] || check.slots[0] || "",
+      fotos: check.slots,
+    });
+    heroSlideIndex = DEFAULT_HERO_INDEX;
+    dialog.close();
+    dialogMode = null;
+    editId = null;
+    dialogFields._orbitSlots = null;
+    const saveBtn = document.getElementById("dialogSave");
+    if (saveBtn) saveBtn.textContent = "Kaydet";
+    route();
+    return;
+  }
+
   const data = readForm();
 
   if (dialogMode === "vehicle") {
@@ -1443,9 +1642,11 @@ form.addEventListener("submit", (e) => {
       motor: data.motor,
       renk: data.renk,
       foto: previous?.foto || "",
+      fotos: previous?.fotos || [],
+      orbit: previous?.orbit || [],
     };
     if (editId) {
-      state.vehicles = state.vehicles.map((v) => (v.id === editId ? payload : v));
+      state.vehicles = state.vehicles.map((v) => (v.id === editId ? { ...previous, ...payload } : v));
     } else {
       state.vehicles.push(payload);
     }
@@ -1545,6 +1746,9 @@ form.addEventListener("submit", (e) => {
   dialog.close();
   dialogMode = null;
   editId = null;
+  dialogFields._orbitSlots = null;
+  const saveBtn = document.getElementById("dialogSave");
+  if (saveBtn) saveBtn.textContent = "Kaydet";
   route();
 });
 
