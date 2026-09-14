@@ -50,8 +50,8 @@ export const DEFAULT_HERO_GALLERY = [
   },
 ];
 export const ORBIT_SLOT_COUNT = DEFAULT_HERO_GALLERY.length;
-/** Varsayılan: kullanıcı referansı (sol çapraz). */
-export const DEFAULT_HERO_INDEX = 1;
+/** Varsayılan: önden çekim (açı #1). */
+export const DEFAULT_HERO_INDEX = 0;
 export const DEFAULT_HERO_SRC = DEFAULT_HERO_GALLERY[DEFAULT_HERO_INDEX].src;
 export const HERO_LEFT_IDS = ["rear-left-quarter", "left-side", "left-three-quarter"];
 export const HERO_ORBIT_IDS = DEFAULT_HERO_GALLERY.map((slide) => slide.id);

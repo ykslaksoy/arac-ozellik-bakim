@@ -84,9 +84,10 @@ test("hero: model/yıl/motor/EDC yazısı yok, varsayılan Megane görseli", () 
 test("hero galeri: sol dönüş ön → sol çapraz → … → sağ ön; Megane otomatik", () => {
   assert.equal(ORBIT_SLOT_COUNT, 8);
   assert.equal(ORBIT_SLOTS.length, 8);
-  assert.equal(DEFAULT_HERO_INDEX, 1);
+  assert.equal(DEFAULT_HERO_INDEX, 0);
   assert.equal(DEFAULT_HERO_GALLERY[DEFAULT_HERO_INDEX].src, DEFAULT_HERO_SRC);
-  assert.equal(DEFAULT_HERO_SRC, "assets/orbit-m3-1-front-left.png");
+  assert.equal(DEFAULT_HERO_SRC, "assets/orbit-m3-0-front.png");
+  assert.equal(DEFAULT_HERO_GALLERY[0].id, "front");
   assert.deepEqual(HERO_ORBIT_IDS, [
     "front",
     "left-three-quarter",
@@ -126,10 +127,10 @@ test("hero galeri: sol dönüş ön → sol çapraz → … → sağ ön; Megane
   const srcs = DEFAULT_HERO_GALLERY.map((s) => s.src);
   assert.equal(new Set(srcs).size, 8);
   assert.ok(HERO_LEFT_IDS.every((id) => HERO_ORBIT_IDS.includes(id)));
-  // +1 from default (sol çapraz) → sol → sol arka
+  // +1 from default (ön) → sol çapraz → sol
   assert.deepEqual(dragRightHeroIds(DEFAULT_HERO_INDEX), [
+    "left-three-quarter",
     "left-side",
-    "rear-left-quarter",
   ]);
   const tour = [];
   let i = 0;
