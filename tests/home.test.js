@@ -86,7 +86,7 @@ test("hero galeri: sol dönüş ön → sol çapraz → … → sağ ön; Megane
   assert.equal(ORBIT_SLOTS.length, 8);
   assert.equal(DEFAULT_HERO_INDEX, 0);
   assert.equal(DEFAULT_HERO_GALLERY[DEFAULT_HERO_INDEX].src, DEFAULT_HERO_SRC);
-  assert.equal(DEFAULT_HERO_SRC, "assets/orbit-m3-0-front.png");
+  assert.equal(DEFAULT_HERO_SRC, "assets/orbit-m3-0-front.jpg");
   assert.equal(DEFAULT_HERO_GALLERY[0].id, "front");
   assert.deepEqual(HERO_ORBIT_IDS, [
     "front",
@@ -101,14 +101,14 @@ test("hero galeri: sol dönüş ön → sol çapraz → … → sağ ön; Megane
   assert.deepEqual(
     DEFAULT_HERO_GALLERY.map((s) => s.src),
     [
-      "assets/orbit-m3-0-front.png",
-      "assets/orbit-m3-1-front-left.png",
-      "assets/orbit-m3-2-left.png",
-      "assets/orbit-m3-3-rear-left.png",
-      "assets/orbit-m3-4-rear.png",
-      "assets/orbit-m3-5-rear-right.png",
-      "assets/orbit-m3-6-right.png",
-      "assets/orbit-m3-7-front-right.png",
+      "assets/orbit-m3-0-front.jpg",
+      "assets/orbit-m3-1-front-left.jpg",
+      "assets/orbit-m3-2-left.jpg",
+      "assets/orbit-m3-3-rear-left.jpg",
+      "assets/orbit-m3-4-rear.jpg",
+      "assets/orbit-m3-5-rear-right.jpg",
+      "assets/orbit-m3-6-right.jpg",
+      "assets/orbit-m3-7-front-right.jpg",
     ],
   );
   assert.deepEqual(

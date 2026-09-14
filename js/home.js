@@ -10,7 +10,7 @@ import {
 
 /**
  * Renault Megane III Sport Tourer — parçalı kaput, plaka 34 MKB 421.
- * Orbit dosyaları `assets/orbit-m3-*.png` (eski hero-megane-* ile senkron).
+ * Orbit dosyaları `assets/orbit-m3-*.jpg` (eski hero-megane-* ile senkron).
  */
 export const DEMO_MEGANE_YEAR = "2012";
 /**
@@ -20,31 +20,31 @@ export const DEMO_MEGANE_YEAR = "2012";
  * Sağ ok / sola kaydırma = +1. Varsayılan index = ön.
  */
 export const DEFAULT_HERO_GALLERY = [
-  { id: "front", src: "assets/orbit-m3-0-front.png", label: "Önden", guide: "Tam karşıdan çekim" },
+  { id: "front", src: "assets/orbit-m3-0-front.jpg", label: "Önden", guide: "Tam karşıdan çekim" },
   {
     id: "left-three-quarter",
-    src: "assets/orbit-m3-1-front-left.png",
+    src: "assets/orbit-m3-1-front-left.jpg",
     label: "Sol çapraz",
     guide: "Ön-sol 45°",
   },
-  { id: "left-side", src: "assets/orbit-m3-2-left.png", label: "Soldan", guide: "Tam sol profil" },
+  { id: "left-side", src: "assets/orbit-m3-2-left.jpg", label: "Soldan", guide: "Tam sol profil" },
   {
     id: "rear-left-quarter",
-    src: "assets/orbit-m3-3-rear-left.png",
+    src: "assets/orbit-m3-3-rear-left.jpg",
     label: "Sol arka çapraz",
     guide: "Arka-sol 45°",
   },
-  { id: "rear", src: "assets/orbit-m3-4-rear.png", label: "Arkadan", guide: "Tam arkadan çekim" },
+  { id: "rear", src: "assets/orbit-m3-4-rear.jpg", label: "Arkadan", guide: "Tam arkadan çekim" },
   {
     id: "rear-right-quarter",
-    src: "assets/orbit-m3-5-rear-right.png",
+    src: "assets/orbit-m3-5-rear-right.jpg",
     label: "Arka sağ çapraz",
     guide: "Arka-sağ 45°",
   },
-  { id: "right-side", src: "assets/orbit-m3-6-right.png", label: "Sağdan", guide: "Tam sağ profil" },
+  { id: "right-side", src: "assets/orbit-m3-6-right.jpg", label: "Sağdan", guide: "Tam sağ profil" },
   {
     id: "right-three-quarter",
-    src: "assets/orbit-m3-7-front-right.png",
+    src: "assets/orbit-m3-7-front-right.jpg",
     label: "Sağ ön çapraz",
     guide: "Ön-sağ 45°",
   },
