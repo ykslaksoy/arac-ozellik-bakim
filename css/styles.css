@@ -221,13 +221,13 @@ body {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: 0;
-  /* Letterbox/beyaz kenar yok — cover + scale ile alanı doldur */
-  object-fit: cover;
-  object-position: center 52%;
-  transform: scale(1.22);
+  /* Arabanın tamamı görünsün — cover kırpması yok */
+  padding: 0.45rem 0.55rem;
+  object-fit: contain;
+  object-position: center center;
+  transform: none;
   transform-origin: center center;
-  background: #cfd5d8;
+  background: #eef1f3;
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
