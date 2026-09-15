@@ -181,7 +181,7 @@ export function demoState(now = new Date()) {
 }
 
 /** Bump when demo fuel/orbit defaults must replace stale localStorage. */
-export const DEMO_SEED_REV = 5;
+export const DEMO_SEED_REV = 7;
 export const DEMO_SEED_REV_KEY = "aob-demo-seed-rev";
 
 export function maybeSeedDemo(state, persistFn) {
