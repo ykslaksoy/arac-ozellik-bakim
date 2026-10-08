@@ -39,6 +39,7 @@ import {
   loopedHeroSlides,
   maybeSeedDemo,
   metricCards,
+  OBD_PILL,
   normalizeOrbitSlots,
   orbitFillStatus,
   tabActive,
@@ -50,6 +51,14 @@ import {
   formatPumpHint,
   loadFuelPrices,
 } from "./fuelPrices.js";
+import {
+  filterFeatures,
+  getFeatureState,
+  groupFeaturesByCategory,
+  profileDisplayLine,
+  resolveProfileForVehicle,
+  setFeatureState,
+} from "./vehicleProfile.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
 const BAKIM_TUR = [
@@ -141,8 +150,8 @@ function route() {
   else if (path === "/hatirlaticilar") renderReminders();
   else if (path === "/ayarlar") renderSettings();
   else if (path === "/tara") renderPlaceholder("Tara", "Plaka veya evrak taraması yakında. Viewfinder ile belge çekeceksiniz.");
-  else if (path === "/ariza") renderPlaceholder("Arıza", "Arıza kayıtları yakında. OBD bağlantısı yok; kodları elle girebilirsiniz.");
-  else if (path === "/gizli") renderPlaceholder("Gizli özellik", "Gizli özellik listesi yakında. Bu ekran yalnızca yer tutucudur.");
+  else if (path === "/ariza") renderAriza();
+  else if (path === "/gizli") renderGizliOzellikler();
   else if (path === "/ekspertiz") renderPlaceholder("Ekspertiz", "Ekspertiz notları yakında. Hasar ve ekspertiz kaydı burada tutulacak.");
   else if (path === "/performans") renderPlaceholder("Performans", "Tüketim ve masraf eğrisi yakında. Özet sayfasındaki veriler korunur.");
   else renderHome();
@@ -703,6 +712,344 @@ function renderPlaceholder(title, text) {
       sectionHead(title, text),
     ]),
   );
+}
+
+function diagnosticVehicle() {
+  ensureVehicleFilter();
+  if (filterVehicleId) return vehicleById(filterVehicleId);
+  return homeVehicle(state);
+}
+
+function obdAdapterReady() {
+  return Boolean(OBD_PILL?.connected);
+}
+
+function profileContextBlock(profile, vehicle) {
+  const meta = profile.meta_data;
+  return el("div", { className: "profile-banner" }, [
+    el("p", { className: "profile-banner-title", text: profileDisplayLine(profile) }),
+    el("p", {
+      className: "hint",
+      text: [
+        meta.kasa_donem,
+        meta.iletisim_protokolu?.replace(/_/g, " "),
+        vehicleLabel(vehicle.id),
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    }),
+  ]);
+}
+
+function profileMissingMessage(vehicle) {
+  return el("div", { className: "empty" }, [
+    el("p", {
+      text: vehicle
+        ? `${vehicleLabel(vehicle.id)} için profil bulunamadı. Megane 3 Icon destekleniyor.`
+        : "Önce garajınıza bir araç ekleyin.",
+    }),
+    vehicle
+      ? el("p", {
+          className: "hint",
+          text: "Paket alanı Icon olan Megane 3 veya demo Megane seçildiğinde profil bağlanır.",
+        })
+      : null,
+  ]);
+}
+
+function segmentFilter(active, onPick) {
+  const row = el("div", { className: "segmented", role: "tablist" });
+  for (const item of [
+    { id: "acik", label: "Açık" },
+    { id: "kapali", label: "Kapalı" },
+    { id: "tumu", label: "Tümü" },
+  ]) {
+    row.append(
+      el("button", {
+        type: "button",
+        className: `segmented-btn${active === item.id ? " active" : ""}`,
+        text: item.label,
+        role: "tab",
+        "aria-selected": active === item.id ? "true" : "false",
+        onClick: () => onPick(item.id),
+      }),
+    );
+  }
+  return row;
+}
+
+function toggleSwitch(checked, onChange, label) {
+  const input = el("input", {
+    type: "checkbox",
+    "aria-label": label,
+    onClick: (e) => {
+      e.preventDefault();
+      onChange(!checked);
+    },
+  });
+  input.checked = checked;
+  return el("label", { className: "toggle" }, [
+    input,
+    el("span", { className: "toggle-track", "aria-hidden": "true" }),
+  ]);
+}
+
+function simulateUdsWrite(feature, nextOn) {
+  const value = nextOn ? feature.aktif_deger_hex : feature.pasif_deger_hex;
+  const payload = `${feature.beyin_adresi_hex} ${feature.istek_kodu_hex} ${value}`;
+  console.info("[SüperAraç simülasyon] OBD yazma (adapter yok):", payload);
+  return payload;
+}
+
+function confirmFeatureToggle(feature, vehicle, nextOn, onDone) {
+  const action = nextOn ? "açmak" : "kapatmak";
+  const lines = [
+    `"${feature.isim_tr}" özelliğini ${action} istiyor musunuz?`,
+    "",
+    `Beyin: 0x${feature.beyin_adresi_hex}`,
+    `İstek: ${feature.istek_kodu_hex}`,
+    `Değer: ${nextOn ? feature.aktif_deger_hex : feature.pasif_deger_hex}`,
+  ];
+  if (!obdAdapterReady()) {
+    lines.push("", "OBD adaptörü bağlı değil — değişiklik yalnızca cihazda kaydedilir (yakında adapter).");
+  }
+  if (!confirm(lines.join("\n"))) return;
+  const sim = simulateUdsWrite(feature, nextOn);
+  const durum = setFeatureState(vehicle.id, feature.ozellik_id, nextOn ? "acik" : "kapali");
+  onDone(durum, sim);
+}
+
+function renderGizliOzellikler() {
+  const vehicle = diagnosticVehicle();
+  const pad = el("div", { className: "page-pad" });
+  app.append(pad);
+
+  pad.append(
+    sectionHead(
+      "Gizli özellik",
+      "Paket profiline göre coding seçenekleri. OBD yazma henüz simülasyon.",
+    ),
+  );
+
+  if (!vehicle) {
+    pad.append(emptyState("Önce bir araç ekleyin."));
+    return;
+  }
+
+  pad.append(el("div", { className: "filters filters-diag" }, [vehicleFilter()]));
+
+  let statusFilter = "tumu";
+  let searchQuery = "";
+  /** @type {Record<string, boolean>} */
+  const detailOpen = {};
+  const host = el("div", { className: "diag-host" });
+  pad.append(host);
+
+  const paint = async () => {
+    host.replaceChildren(el("p", { className: "hint", text: "Profil yükleniyor…" }));
+    try {
+      const profile = await resolveProfileForVehicle(vehicle);
+      if (!profile) {
+        host.replaceChildren(profileMissingMessage(vehicle));
+        return;
+      }
+
+      const enriched = profile.gizli_ozellikler.map((f) => ({
+        ...f,
+        _durum: getFeatureState(vehicle.id, f),
+      }));
+      const visible = filterFeatures(enriched, { status: statusFilter, query: searchQuery });
+      const groups = groupFeaturesByCategory(visible);
+
+      const shell = el("div", {}, [
+        profileContextBlock(profile, vehicle),
+        el("div", { className: "diag-toolbar" }, [
+          segmentFilter(statusFilter, (id) => {
+            statusFilter = id;
+            paint();
+          }),
+          el("input", {
+            className: "search-input",
+            type: "search",
+            placeholder: "Özellik ara (Türkçe)",
+            value: searchQuery,
+            onInput: (e) => {
+              searchQuery = e.target.value;
+              paint();
+            },
+          }),
+        ]),
+      ]);
+
+      if (!visible.length) {
+        shell.append(emptyState("Bu filtrede özellik bulunamadı."));
+      } else {
+        for (const [category, items] of groups) {
+          const section = el("section", { className: "feature-group" }, [
+            el("h2", { className: "feature-group-title", text: category }),
+          ]);
+          for (const feature of items) {
+            const isOpen = Boolean(detailOpen[feature.ozellik_id]);
+            const card = el("article", { className: "feature-card" });
+            const head = el("div", { className: "feature-card-head" }, [
+              el("div", {}, [
+                el("h3", { className: "feature-title", text: feature.isim_tr }),
+                el("p", { className: "feature-desc", text: feature.aciklama_tr }),
+              ]),
+              toggleSwitch(feature._durum === "acik", (on) => {
+                confirmFeatureToggle(feature, vehicle, on, () => paint());
+              }, feature.isim_tr),
+            ]);
+            card.append(head);
+            card.append(
+              el("button", {
+                type: "button",
+                className: "btn btn-ghost btn-sm feature-detail-btn",
+                text: isOpen ? "Detayı gizle" : "Hex detayı",
+                onClick: () => {
+                  detailOpen[feature.ozellik_id] = !isOpen;
+                  paint();
+                },
+              }),
+            );
+            if (isOpen) {
+              card.append(
+                el("dl", { className: "hex-detail" }, [
+                  el("dt", { text: "Beyin (hex)" }),
+                  el("dd", { text: `0x${feature.beyin_adresi_hex}` }),
+                  el("dt", { text: "İstek kodu" }),
+                  el("dd", { text: feature.istek_kodu_hex }),
+                  el("dt", { text: "Aktif / Pasif" }),
+                  el("dd", {
+                    text: `${feature.aktif_deger_hex} / ${feature.pasif_deger_hex}`,
+                  }),
+                  el("dt", { text: "Varsayılan" }),
+                  el("dd", { text: feature.varsayilan_durum }),
+                ]),
+              );
+            }
+            section.append(card);
+          }
+          shell.append(section);
+        }
+      }
+      host.replaceChildren(shell);
+    } catch (err) {
+      host.replaceChildren(
+        el("p", { className: "hint error", text: err?.message || "Profil okunamadı." }),
+      );
+    }
+  };
+
+  paint();
+}
+
+function renderAriza() {
+  const vehicle = diagnosticVehicle();
+  const pad = el("div", { className: "page-pad" });
+  app.append(pad);
+
+  pad.append(
+    sectionHead(
+      "Arıza kodları",
+      "Profildeki sözlük ve güvenli silme komutu. Tarama adaptör bağlandığında çalışacak.",
+    ),
+  );
+
+  if (!vehicle) {
+    pad.append(emptyState("Önce bir araç ekleyin."));
+    return;
+  }
+
+  pad.append(el("div", { className: "filters filters-diag" }, [vehicleFilter()]));
+
+  const host = el("div", { className: "diag-host" });
+  pad.append(host);
+
+  const paint = async () => {
+    host.replaceChildren(el("p", { className: "hint", text: "Profil yükleniyor…" }));
+    try {
+      const profile = await resolveProfileForVehicle(vehicle);
+      if (!profile) {
+        host.replaceChildren(profileMissingMessage(vehicle));
+        return;
+      }
+
+      const dict = profile.diagnostik_sozlugu || {};
+      const brains = dict.tarama_yapilacak_beyinler || [];
+      const codes = dict.ariza_kodlari || [];
+
+      const shell = el("div", {}, [
+        profileContextBlock(profile, vehicle),
+        el("div", { className: "stat stat-wide" }, [
+          el("span", { className: "stat-label", text: "Tarama yapılacak beyinler" }),
+          el("span", {
+            className: "stat-value stat-value-sm",
+            text: brains.length
+              ? brains.map((b) => `${b.beyin_adi} (0x${b.id_hex})`).join(" · ")
+              : "—",
+          }),
+        ]),
+        el("div", { className: "table-scroll" }, [
+          el("table", { className: "data data-wrap" }, [
+            el("thead", {}, [
+              el("tr", {}, [
+                el("th", { text: "Kod" }),
+                el("th", { text: "Tanım (TR)" }),
+              ]),
+            ]),
+            el(
+              "tbody",
+              {},
+              codes.map((row) =>
+                el("tr", {}, [
+                  el("td", { text: row.kod }),
+                  el("td", { text: row.tanim_tr }),
+                ]),
+              ),
+            ),
+          ]),
+        ]),
+        el("div", { className: "safe-clear" }, [
+          el("p", {
+            className: "hint",
+            text: `Güvenli silme komutu: ${dict.guvenli_silme_komutu_hex || "—"}`,
+          }),
+          el("button", {
+            type: "button",
+            className: "btn btn-danger",
+            text: "Arıza kodlarını güvenli sil",
+            onClick: () => {
+              if (!obdAdapterReady()) {
+                alert(
+                  "OBD adaptörü bağlı değil. Silme işlemi yakında ELM327 / CAN bağlantısı ile yapılacak.",
+                );
+                return;
+              }
+              const cmd = dict.guvenli_silme_komutu_hex;
+              if (
+                !confirm(
+                  `Tüm ECU’larda güvenli silme komutu gönderilsin mi?\n\nKomut: ${cmd}\n\nBu işlem geri alınamaz.`,
+                )
+              ) {
+                return;
+              }
+              console.info("[SüperAraç] Güvenli silme:", cmd);
+              alert("Komut simüle edildi (log konsol).");
+            },
+          }),
+        ]),
+      ]);
+
+      host.replaceChildren(shell);
+    } catch (err) {
+      host.replaceChildren(
+        el("p", { className: "hint error", text: err?.message || "Profil okunamadı." }),
+      );
+    }
+  };
+
+  paint();
 }
 
 function stat(label, value) {
