@@ -1055,6 +1055,43 @@ table.data th {
   text-decoration: none;
 }
 
+.ariza-context {
+  color: var(--ink-soft);
+  margin: 0 0 1rem;
+}
+
+.ariza-section {
+  margin-top: 1.25rem;
+}
+
+.module-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.module-list li {
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: var(--surface-2, #f0f2f3);
+}
+
+.module-name {
+  font-weight: 600;
+}
+
+.expert-panel {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.expert-list {
+  margin: 0.5rem 0 0 1rem;
+}
+
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.9rem;

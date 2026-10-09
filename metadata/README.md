@@ -1,45 +1,45 @@
 # Metadata indeksi (kamuya açık)
 
-Bu dizin, SüperAraç’ın **telif içermeyen** kamu metadata katmanıdır. Amaç: hangi trim’in hangi özellik paketine ve ECU set desenine bağlandığını **kimlik ve referans** düzeyinde tanımlamak; OEM XML veya zip arşivi **burada yoktur**.
+Telif içermeyen kimlik ve eşleme katmanı. OEM XML ve zip arşivi **yok**.
 
-## Dizin yapısı
+## Genişleme (yeni model/paket)
 
-```
-metadata/
-  brands/<marka>/models/<model>/trims.json
-  feature-packs/<packId>.json
-  ecu-sets/<setId>.json
-```
+1. `metadata/brands/{marka}/models/{model}/trims.json` — paket listesi + `profilePath`
+2. `data/vehicles/{marka}/{model}/{paket}/profile.json` — kullanıcı profil şablonu
+3. Gerekirse `metadata/feature-packs/` ve `metadata/ecu-sets/` dosyası ekleyin
+4. `metadata/_index.json` içine yeni marka/model girişi (yalnızca `trimsPath`)
 
-## `trims.json` örnek şema
+Loader: `js/vehicleMetadata.js` — `_index.json` okur, `trims.json` yürütür.
+
+## `trims.json`
 
 ```json
 {
-  "modelId": "renault-megane-3",
-  "trims": [
-    {
-      "id": "icon",
-      "label": "Icon",
-      "yearFrom": 2009,
-      "yearTo": 2012,
-      "featurePackId": "renault.megane3.icon.tr",
-      "ecuSetId": "renault-megane3-phase2-comfort"
-    }
-  ]
+  "id": "icon",
+  "label": "Icon",
+  "yearFrom": 2009,
+  "yearTo": 2014,
+  "featurePackId": "renault.megane3.icon.tr",
+  "ecuSetId": "renault-megane3-phase2-comfort",
+  "profilePath": "data/vehicles/renault/megane-3/icon/profile.json"
 }
 ```
 
-## `feature-packs/*.json`
+## Modül şeması (`ecu-sets`)
 
-- `featureId` listesi ve Türkçe kullanıcı etiketleri  
-- İsteğe bağlı `ddt4allMapping`: yalnızca **anonim** referanslar (`ecuFilePatternRef`, `screenId` placeholder); ham XML metni yok
+Repoda `ecuFilePatterns` ve isteğe bağlı `id_hex` kalabilir; **UI bunları göstermez**.
 
-## `ecu-sets/*.json`
+```json
+{
+  "modul_id": "body-comfort-01",
+  "modul_tr": "Gövde ve konfor",
+  "id_hex": "745",
+  "ecuFilePatterns": ["745_*.xml"]
+}
+```
 
-- `ecuFilePatterns`: zip içindeki dosya adlarına karşılık **glob** desenleri  
-- `logicalAddress` ve benzeri tanımlayıcılar  
-- Zip içeriği veya XML gövdesi **yok**
+Kullanıcı arayüzü: yalnızca `modul_tr`. Uzman adresi yalnızca gizli `<details>` (varsayılan kapalı) veya hiç.
 
 ## BYOD
 
-Gerçek ECU arşivi kullanıcı tarafından cihaza yüklenir. Metadata, yüklü arşivdeki dosya adlarını **eşleştirmek** için desen kullanır; arşivi repoda sunmaz. Ayrıntı: kök `DATA_POLICY.md`.
+Gerçek arşiv cihazda. Ayrıntı: `DATA_POLICY.md`.

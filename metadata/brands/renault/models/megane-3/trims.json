@@ -8,7 +8,8 @@
       "yearFrom": 2008,
       "yearTo": 2012,
       "featurePackId": "renault.megane3.joy.tr",
-      "ecuSetId": "renault-megane3-phase2-comfort"
+      "ecuSetId": "renault-megane3-phase2-comfort",
+      "profilePath": "data/vehicles/renault/megane-3/joy/profile.json"
     },
     {
       "id": "icon",
@@ -16,7 +17,8 @@
       "yearFrom": 2009,
       "yearTo": 2014,
       "featurePackId": "renault.megane3.icon.tr",
-      "ecuSetId": "renault-megane3-phase2-comfort"
+      "ecuSetId": "renault-megane3-phase2-comfort",
+      "profilePath": "data/vehicles/renault/megane-3/icon/profile.json"
     },
     {
       "id": "dynamique",
@@ -24,7 +26,8 @@
       "yearFrom": 2008,
       "yearTo": 2013,
       "featurePackId": "renault.megane3.dynamique.tr",
-      "ecuSetId": "renault-megane3-phase2-comfort"
+      "ecuSetId": "renault-megane3-phase2-comfort",
+      "profilePath": "data/vehicles/renault/megane-3/dynamique/profile.json"
     }
   ]
 }

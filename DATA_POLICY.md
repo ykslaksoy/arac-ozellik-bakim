@@ -41,6 +41,23 @@ Geliştiriciler test için tam arşivi **yalnızca yerel** veya özel store alan
 - **Metadata** (JSON): marka/model/trim kimlikleri, `featurePackId`, `ecuSetId`, yıl aralığı, özellik etiketleri, dosya adı **glob** desenleri, anonim `ecuFilePattern` hash veya kimlik referansları.  
 - **Binary / ham XML**: yalnızca kullanıcı cihazında, BYOD anahtarı (`aob-byod-database-v1`) altında; repoda **asla**.
 
+## Kullanıcıya gösterilmeyen OEM tanımları
+
+Uygulama ve kamu metadata **kullanıcı arayüzünde** şunları **göstermez**:
+
+- Üretici ECU kısaltmaları (ör. UCH, BCM, ABS beyin kodları)  
+- `beyin_adi` veya “UCH (Gövde Kontrol)” gibi karma OEM etiketleri  
+- Arşiv dosya adları ve `ecuFilePatterns` glob metinleri  
+- Varsayılan olarak onaltılık adres (`id_hex`) — yalnızca isteğe bağlı kapalı uzman alanında olabilir  
+
+Kullanıcıya sunulan katman:
+
+- `modul_tr` — Türkçe modül adı (ör. “Gövde ve konfor”)  
+- `modul_id` — anonim stabil kimlik (geliştirici eşleme; kullanıcıya zorunlu değil)  
+- Marka / model / paket bağlamı (`vehicleRef`, trim etiketi)
+
+Repoda `id_hex` ve glob desenler **yalnızca** BYOD arşivi ile eşleme için tutulur; APK/repo dağıtımı bunları kullanıcıya sızdırmaz.
+
 ## İletişim ve güncellemeler
 
 Politika değişiklikleri bu dosyada yayımlanır. Uygulama içi **Ayarlar → Veri ve telif** bölümü özet bilgi verir; tam metin için depo kökündeki bu dosyaya bakın.

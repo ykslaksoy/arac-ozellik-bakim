@@ -58,6 +58,14 @@ import {
   importLegalConsent,
   saveFingerprint,
 } from "./byodDatabase.js";
+import {
+  expertModuleDetails,
+  loadCatalog,
+  loadEcuSet,
+  loadProfile,
+  matchCatalogPackage,
+  userVisibleModules,
+} from "./vehicleMetadata.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
 const BAKIM_TUR = [
@@ -149,7 +157,7 @@ function route() {
   else if (path === "/hatirlaticilar") renderReminders();
   else if (path === "/ayarlar") renderSettings();
   else if (path === "/tara") renderPlaceholder("Tara", "Plaka veya evrak taraması yakında. Viewfinder ile belge çekeceksiniz.");
-  else if (path === "/ariza") renderPlaceholder("Arıza", "Arıza kayıtları yakında. OBD bağlantısı yok; kodları elle girebilirsiniz.");
+  else if (path === "/ariza") renderAriza();
   else if (path === "/gizli") renderGizli();
   else if (path === "/ekspertiz") renderPlaceholder("Ekspertiz", "Ekspertiz notları yakında. Hasar ve ekspertiz kaydı burada tutulacak.");
   else if (path === "/performans") renderPlaceholder("Performans", "Tüketim ve masraf eğrisi yakında. Özet sayfasındaki veriler korunur.");
@@ -839,16 +847,123 @@ function renderGizli() {
   const wrap = el("div", { className: "page-pad" });
   wrap.append(
     legalWarningBanner(
-      "Bu bölümdeki gizli özellikler, cihazınıza içe aktardığınız yasal ECU veritabanı ve kamu metadata ile eşleşecektir.",
+      "Bu bölümdeki gizli özellikler, cihazınıza içe aktardığınız yasal veritabanı ve kamu metadata ile eşleşecektir.",
     ),
     sectionHead(
       "Gizli özellik",
       hasImportedDatabase()
         ? "Veritabanı kaydı var; özellik listesi yakında metadata ile bağlanacak."
-        : "Önce Ayarlar → Veri ve telif üzerinden ECU arşivinizi içe aktarın.",
+        : "Önce Ayarlar → Veri ve telif üzerinden arşivinizi içe aktarın.",
     ),
   );
   app.append(wrap);
+}
+
+function renderAriza() {
+  const wrap = el("div", { className: "page-pad" });
+  wrap.append(
+    sectionHead(
+      "Arıza",
+      "OBD bağlantısı yok; kodları elle kaydedin. Modül adları Türkçedir.",
+    ),
+    el("p", { className: "ariza-loading", text: "Profil ve modül listesi yükleniyor…" }),
+  );
+  app.append(wrap);
+
+  (async () => {
+    try {
+      const catalog = await loadCatalog();
+      const pkg = matchCatalogPackage(homeVehicle(state), catalog);
+      if (!pkg?.profilePath) {
+        wrap.querySelector(".ariza-loading").textContent =
+          "Henüz tanımlı profil yok.";
+        return;
+      }
+      const [profile, ecuSet] = await Promise.all([
+        loadProfile(pkg.profilePath),
+        loadEcuSet(pkg.ecuSetId),
+      ]);
+      const loading = wrap.querySelector(".ariza-loading");
+      loading?.remove();
+
+      const context = el("p", {
+        className: "ariza-context",
+        text: `${pkg.brandLabel} ${pkg.modelLabel} · ${pkg.trimLabel} paket`,
+      });
+      wrap.insertBefore(context, wrap.firstChild?.nextSibling || null);
+
+      const modules = userVisibleModules(ecuSet);
+      const modList = el("ul", { className: "module-list" });
+      for (const m of modules) {
+        modList.append(
+          el("li", {}, [el("span", { className: "module-name", text: m.modul_tr })]),
+        );
+      }
+      wrap.append(
+        el("section", { className: "ariza-section" }, [
+          el("h2", { className: "settings-subtitle", text: "Araç modülleri" }),
+          el("p", {
+            className: "hint",
+            text: "Tanıda hangi bölümle ilgili olduğunu bu listeden seçin; kısaltma veya dosya adı gösterilmez.",
+          }),
+          modList,
+        ]),
+      );
+
+      const expert = el("details", { className: "expert-panel" });
+      expert.append(el("summary", { text: "Uzman: adres kimlikleri (varsayılan gizli)" }));
+      const expertList = el("ul", { className: "expert-list mono" });
+      for (const row of expertModuleDetails(ecuSet)) {
+        expertList.append(
+          el("li", {
+            text: `${row.modul_tr} · ${row.modul_id}${row.id_hex ? ` · ${row.id_hex}` : ""}`,
+          }),
+        );
+      }
+      expert.append(expertList);
+      wrap.append(expert);
+
+      const records = profile.arizaKayitlari || [];
+      const list = el("div", { className: "list" });
+      if (!records.length) {
+        list.append(emptyState("Kayıtlı arıza yok. Kod ve modülü elle ekleyeceksiniz."));
+      } else {
+        for (const r of records) {
+          list.append(
+            el("article", { className: "item" }, [
+              el("div", {}, [
+                el("h3", {
+                  className: "item-title",
+                  text: `${r.kod || "—"} · ${r.modul_tr || "Modül"}`,
+                }),
+                el("p", {
+                  className: "item-meta",
+                  text: [r.aciklamaTr, r.tarih ? fmtDate(r.tarih) : null]
+                    .filter(Boolean)
+                    .join(" · "),
+                }),
+              ]),
+            ]),
+          );
+        }
+      }
+      wrap.append(
+        el("section", { className: "ariza-section" }, [
+          el("h2", { className: "settings-subtitle", text: "Kayıtlar" }),
+          list,
+          el("p", {
+            className: "hint",
+            text: "Yeni kayıt formu sonraki sürümde; şimdilik örnek profil JSON’daki kayıtlar gösterilir.",
+          }),
+        ]),
+      );
+    } catch {
+      const loading = wrap.querySelector(".ariza-loading");
+      if (loading) {
+        loading.textContent = "Metadata yüklenemedi. Statik sunucu ile açın.";
+      }
+    }
+  })();
 }
 
 function stat(label, value) {

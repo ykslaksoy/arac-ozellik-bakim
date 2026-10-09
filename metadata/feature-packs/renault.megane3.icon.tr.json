@@ -17,8 +17,8 @@
   "ddt4allMapping": [
     {
       "featureId": "kadran_selamlama",
-      "ecuFilePatternRef": "sha256:anon:7f3a9c2e1b004d8a6e5f9012345678abcdef0123456789abcdef01234567",
-      "screenId": "PLACEHOLDER_SCREEN_DASH_GREETING"
+      "modul_id": "instrument-cluster-01",
+      "ecuFilePatternRef": "sha256:anon:7f3a9c2e1b004d8a6e5f9012345678abcdef0123456789abcdef01234567"
     }
   ]
 }

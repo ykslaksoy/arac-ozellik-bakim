@@ -1,49 +1,29 @@
-# Kullanıcı araç profili şablonu
+# Kullanıcı araç profilleri (klasör yapısı)
 
-Bu dizin **üretici ECU veritabanı değildir**. Kullanıcının kendi aracına özel, uygulama içinde tutulabilecek **profil ve komut özeti** için JSON şablonu tanımlar. Ham DDT/OEM XML burada yer almaz.
+Üretici ECU veritabanı **burada değildir**. Her paket için ayrı klasör; yeni model/paket = yeni dizin, uygulama kodu minimum değişir.
 
-## Örnek `profile.json`
+## Dizin kuralı
 
-```json
-{
-  "version": 1,
-  "vehicleRef": {
-    "brand": "Renault",
-    "model": "Megane III",
-    "trimId": "icon",
-    "year": 2011,
-    "metadataTrimPath": "metadata/brands/renault/models/megane-3/trims.json"
-  },
-  "featurePackId": "renault.megane3.icon.tr",
-  "ecuSetId": "renault-megane3-phase2-comfort",
-  "userNotes": "Icon paket — kadran selamlama açık.",
-  "commandSummaries": [
-    {
-      "featureId": "kadran_selamlama",
-      "titleTr": "Kadran selamlama",
-      "stepsTr": [
-        "Tanı modunda gösterge ECU’sunu seçin.",
-        "İlgili ekranda selamlama parametresini bulun.",
-        "Değişiklikten önce mevcut ayarı not alın."
-      ],
-      "riskTr": "Yanlış yazma gösterge davranışını etkileyebilir; yedek alın."
-    }
-  ],
-  "byod": {
-    "databaseImported": false,
-    "fingerprintSha256": null,
-    "importedAt": null
-  }
-}
+```
+data/vehicles/{marka-slug}/{model-slug}/{paket-slug}/profile.json
 ```
 
-## Alanlar
+Örnek: `data/vehicles/renault/megane-3/icon/profile.json`
+
+`metadata/brands/{marka}/models/{model}/trims.json` içindeki her trim satırı `profilePath` ile bu dosyayı işaret eder. Kök indeks: `metadata/_index.json`.
+
+## `profile.json` şeması (özet)
 
 | Alan | Açıklama |
 |------|----------|
-| `featurePackId` | Kamu metadata’daki özellik paketi kimliği |
-| `ecuSetId` | Kamu metadata’daki ECU dosya desen seti |
-| `commandSummaries` | Türkçe adımlar; OEM komut metni veya XML yok |
-| `byod` | Cihazda içe aktarılan arşivin parmak izi (uygulama doldurur) |
+| `vehicleRef` | `brandSlug`, `modelSlug`, `paketSlug`, Türkçe/etiket alanları |
+| `featurePackId` / `ecuSetId` | Kamu metadata kimlikleri |
+| `commandSummaries` | `modul_tr` + Türkçe adımlar; OEM kısaltması yok |
+| `arizaKayitlari` | `modul_tr`, `kod`, `aciklamaTr` — UCH/ECU adı yok |
+| `byod` | Cihazda içe aktarma parmak izi (uygulama doldurur) |
 
-Tam veri politikası: depo kökünde `DATA_POLICY.md`.
+## UI kuralı
+
+Kullanıcıya **UCH**, **BCM**, dosya adı (`742_*.xml`) veya `beyin_adi` tarzı metinler **gösterilmez**. Yalnızca `modul_tr` (ör. "Gövde ve konfor") ve marka/model/paket bağlamı.
+
+Tam politika: `DATA_POLICY.md`.
