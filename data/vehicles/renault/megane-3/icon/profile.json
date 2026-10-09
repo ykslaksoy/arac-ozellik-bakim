@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "vehicleRef": {
+    "brandSlug": "renault",
+    "brandLabel": "Renault",
+    "modelSlug": "megane-3",
+    "modelLabel": "Megane III",
+    "paketSlug": "icon",
+    "paketLabel": "Icon",
+    "year": 2011
+  },
+  "featurePackId": "renault.megane3.icon.tr",
+  "ecuSetId": "renault-megane3-phase2-comfort",
+  "userNotes": "Icon paket — kadran selamlama açık.",
+  "commandSummaries": [
+    {
+      "featureId": "kadran_selamlama",
+      "modul_id": "instrument-cluster-01",
+      "modul_tr": "Gösterge paneli",
+      "titleTr": "Kadran selamlama",
+      "stepsTr": [
+        "Tanı modunda Gösterge paneli modülünü seçin.",
+        "Selamlama ile ilgili menüyü açın.",
+        "Değişiklikten önce mevcut ayarı not alın."
+      ],
+      "riskTr": "Yanlış ayar gösterge davranışını etkileyebilir; yedek alın."
+    }
+  ],
+  "arizaKayitlari": [
+    {
+      "id": "ornek-1",
+      "modul_id": "body-comfort-01",
+      "modul_tr": "Gövde ve konfor",
+      "kod": "B1000",
+      "aciklamaTr": "Örnek kayıt — gerçek kodları siz girersiniz.",
+      "tarih": "2026-09-15"
+    }
+  ],
+  "byod": {
+    "databaseImported": false,
+    "fingerprintSha256": null,
+    "importedAt": null
+  }
+}

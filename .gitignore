@@ -4,3 +4,12 @@
 .env.*
 node_modules/
 .vercel
+
+# Telifli / kullanıcı ECU arşivleri — repoya girmez
+*.zip
+ecu*.part*
+internal/ddt4all/
+
+# Kullanıcı BYOD içe aktarma staging (yerel geliştirme)
+data/import-staging/
+data/byod-local/

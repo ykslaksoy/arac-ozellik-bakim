@@ -50,6 +50,22 @@ import {
   formatPumpHint,
   loadFuelPrices,
 } from "./fuelPrices.js";
+import {
+  clearByodDatabase,
+  fingerprintZipFile,
+  getByodDataStatus,
+  hasImportedDatabase,
+  recordDataSourceConsent,
+  saveFingerprint,
+} from "./byodDatabase.js";
+import {
+  expertModuleDetails,
+  loadCatalog,
+  loadEcuSet,
+  loadProfile,
+  matchCatalogPackage,
+  userVisibleModules,
+} from "./vehicleMetadata.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
 const BAKIM_TUR = [
@@ -141,8 +157,8 @@ function route() {
   else if (path === "/hatirlaticilar") renderReminders();
   else if (path === "/ayarlar") renderSettings();
   else if (path === "/tara") renderPlaceholder("Tara", "Plaka veya evrak taraması yakında. Viewfinder ile belge çekeceksiniz.");
-  else if (path === "/ariza") renderPlaceholder("Arıza", "Arıza kayıtları yakında. OBD bağlantısı yok; kodları elle girebilirsiniz.");
-  else if (path === "/gizli") renderPlaceholder("Gizli özellik", "Gizli özellik listesi yakında. Bu ekran yalnızca yer tutucudur.");
+  else if (path === "/ariza") renderAriza();
+  else if (path === "/gizli") renderGizli();
   else if (path === "/ekspertiz") renderPlaceholder("Ekspertiz", "Ekspertiz notları yakında. Hasar ve ekspertiz kaydı burada tutulacak.");
   else if (path === "/performans") renderPlaceholder("Performans", "Tüketim ve masraf eğrisi yakında. Özet sayfasındaki veriler korunur.");
   else renderHome();
@@ -705,6 +721,246 @@ function renderPlaceholder(title, text) {
   );
 }
 
+function dataNoticeBanner(message) {
+  return el("div", { className: "data-notice-banner", role: "note" }, [
+    el("p", { text: message }),
+    el("a", {
+      href: "#/ayarlar",
+      "data-nav": "",
+      className: "data-notice-banner-link",
+      text: "Veri yönetimi",
+    }),
+  ]);
+}
+
+function renderDataManagementSection() {
+  const status = getByodDataStatus();
+  let consentChecked = status.consent.accepted;
+  const statusLine = el("p", {
+    className: "byod-status mono",
+    text: status.import.imported
+      ? `Yüklü: ${status.import.fileName} · ${status.import.fingerprintSha256?.slice(0, 12)}…`
+      : "Henüz ECU veritabanı içe aktarılmadı.",
+  });
+
+  const consentRow = el("label", { className: "byod-consent" });
+  const consentInput = el("input", { type: "checkbox" });
+  consentInput.checked = consentChecked;
+  consentInput.addEventListener("change", () => {
+    consentChecked = consentInput.checked;
+    recordDataSourceConsent(consentChecked);
+    statusLine.textContent = getByodDataStatus().import.imported
+      ? statusLine.textContent
+      : "Henüz ECU veritabanı içe aktarılmadı.";
+  });
+  consentRow.append(
+    consentInput,
+    el("span", {
+      text:
+        "Bu dosyanın kullanım hakkına sahip olduğumu ve verilerin yalnızca cihazımda işleneceğini onaylıyorum.",
+    }),
+  );
+
+  const fileInput = el("input", {
+    type: "file",
+    accept: ".zip,application/zip",
+    style: "display:none",
+  });
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!getByodDataStatus().consent.accepted) {
+      alert("Önce onay kutusunu işaretleyin.");
+      return;
+    }
+    try {
+      const meta = await fingerprintZipFile(file);
+      const saved = saveFingerprint(meta);
+      if (!saved.ok) {
+        alert("Kayıt başarısız. Onay gerekli olabilir.");
+        return;
+      }
+      statusLine.textContent = `Yüklü: ${meta.fileName} · ${meta.fingerprintSha256.slice(0, 12)}…`;
+      route();
+    } catch {
+      alert("Dosya okunamadı.");
+    }
+  });
+
+  const importBtn = el("button", {
+    type: "button",
+    className: "btn btn-primary",
+    text: "ECU veritabanı yükle (.zip)",
+    onClick: () => fileInput.click(),
+  });
+
+  const clearBtn = el("button", {
+    type: "button",
+    className: "btn btn-ghost",
+    text: "BYOD kaydını temizle",
+    onClick: () => {
+      if (!hasImportedDatabase() && !getByodDataStatus().consent.accepted) return;
+      if (!confirm("Cihazdaki ECU içe aktarma kaydı ve onay silinsin mi?")) return;
+      clearByodDatabase();
+      consentInput.checked = false;
+      consentChecked = false;
+      statusLine.textContent = "Henüz ECU veritabanı içe aktarılmadı.";
+      route();
+    },
+  });
+
+  const bullets = el("ul", { className: "byod-bullets" });
+  for (const line of [
+    "ECU zip ve DDT XML repoda veya APK’da yoktur (BYOD).",
+    "Kaynağınızdan aldığınız arşivi yalnızca cihaza aktarın.",
+    "İçe aktarma meta verisi (dosya adı, SHA-256) bu cihazda saklanır.",
+    "Drive linki veya üçüncü taraf paket dağıtımı desteklenmez.",
+    "Tam metin: github.com/ykslaksoy/arac-ozellik-bakim → VERI_STANDARTLARI.md",
+  ]) {
+    bullets.append(el("li", { text: line }));
+  }
+
+  return el("section", { className: "settings-block byod-block" }, [
+    el("h2", { className: "settings-subtitle", text: "Veri yönetimi" }),
+    bullets,
+    consentRow,
+    el("div", { className: "cta-row", style: "margin:0.75rem 0" }, [
+      importBtn,
+      clearBtn,
+      fileInput,
+    ]),
+    statusLine,
+    el("p", {
+      className: "hint",
+      text: "Bu sürümde zip yalnızca parmak izi için okunur; tam parse sonraki fazda. Gizli özellik listesi metadata ile eşleşecek.",
+    }),
+  ]);
+}
+
+function renderGizli() {
+  const wrap = el("div", { className: "page-pad" });
+  wrap.append(
+    dataNoticeBanner(
+      "Üretici tanımları cihazınızda; ekranda yalnızca marka, model ve paket bilgisi gösterilir.",
+    ),
+    sectionHead(
+      "Gizli özellik",
+      hasImportedDatabase()
+        ? "Veritabanı kaydı var; özellik listesi yakında metadata ile bağlanacak."
+        : "Önce Ayarlar → Veri yönetimi üzerinden arşivinizi içe aktarın.",
+    ),
+  );
+  app.append(wrap);
+}
+
+function renderAriza() {
+  const wrap = el("div", { className: "page-pad" });
+  wrap.append(
+    sectionHead(
+      "Arıza",
+      "OBD bağlantısı yok; kodları elle kaydedin. Modül adları Türkçedir.",
+    ),
+    el("p", { className: "ariza-loading", text: "Profil ve modül listesi yükleniyor…" }),
+  );
+  app.append(wrap);
+
+  (async () => {
+    try {
+      const catalog = await loadCatalog();
+      const pkg = matchCatalogPackage(homeVehicle(state), catalog);
+      if (!pkg?.profilePath) {
+        wrap.querySelector(".ariza-loading").textContent =
+          "Henüz tanımlı profil yok.";
+        return;
+      }
+      const [profile, ecuSet] = await Promise.all([
+        loadProfile(pkg.profilePath),
+        loadEcuSet(pkg.ecuSetId),
+      ]);
+      const loading = wrap.querySelector(".ariza-loading");
+      loading?.remove();
+
+      const context = el("p", {
+        className: "ariza-context",
+        text: `${pkg.brandLabel} ${pkg.modelLabel} · ${pkg.trimLabel} paket`,
+      });
+      wrap.insertBefore(context, wrap.firstChild?.nextSibling || null);
+
+      const modules = userVisibleModules(ecuSet);
+      const modList = el("ul", { className: "module-list" });
+      for (const m of modules) {
+        modList.append(
+          el("li", {}, [el("span", { className: "module-name", text: m.modul_tr })]),
+        );
+      }
+      wrap.append(
+        el("section", { className: "ariza-section" }, [
+          el("h2", { className: "settings-subtitle", text: "Araç modülleri" }),
+          el("p", {
+            className: "hint",
+            text: "Tanıda hangi bölümle ilgili olduğunu bu listeden seçin; kısaltma veya dosya adı gösterilmez.",
+          }),
+          modList,
+        ]),
+      );
+
+      const expert = el("details", { className: "expert-panel" });
+      expert.append(el("summary", { text: "Uzman: adres kimlikleri (varsayılan gizli)" }));
+      const expertList = el("ul", { className: "expert-list mono" });
+      for (const row of expertModuleDetails(ecuSet)) {
+        expertList.append(
+          el("li", {
+            text: `${row.modul_tr} · ${row.modul_id}${row.id_hex ? ` · ${row.id_hex}` : ""}`,
+          }),
+        );
+      }
+      expert.append(expertList);
+      wrap.append(expert);
+
+      const records = profile.arizaKayitlari || [];
+      const list = el("div", { className: "list" });
+      if (!records.length) {
+        list.append(emptyState("Kayıtlı arıza yok. Kod ve modülü elle ekleyeceksiniz."));
+      } else {
+        for (const r of records) {
+          list.append(
+            el("article", { className: "item" }, [
+              el("div", {}, [
+                el("h3", {
+                  className: "item-title",
+                  text: `${r.kod || "—"} · ${r.modul_tr || "Modül"}`,
+                }),
+                el("p", {
+                  className: "item-meta",
+                  text: [r.aciklamaTr, r.tarih ? fmtDate(r.tarih) : null]
+                    .filter(Boolean)
+                    .join(" · "),
+                }),
+              ]),
+            ]),
+          );
+        }
+      }
+      wrap.append(
+        el("section", { className: "ariza-section" }, [
+          el("h2", { className: "settings-subtitle", text: "Kayıtlar" }),
+          list,
+          el("p", {
+            className: "hint",
+            text: "Yeni kayıt formu sonraki sürümde; şimdilik örnek profil JSON’daki kayıtlar gösterilir.",
+          }),
+        ]),
+      );
+    } catch {
+      const loading = wrap.querySelector(".ariza-loading");
+      if (loading) {
+        loading.textContent = "Metadata yüklenemedi. Statik sunucu ile açın.";
+      }
+    }
+  })();
+}
+
 function stat(label, value) {
   return el("div", { className: "stat" }, [
     el("span", { className: "stat-label", text: label }),
@@ -933,7 +1189,8 @@ function renderReminders() {
 
 function renderSettings() {
   app.append(
-    sectionHead("Ayarlar", "Yedekleme, içe aktarma ve veri temizliği"),
+    sectionHead("Ayarlar", "Yedekleme, BYOD veritabanı ve veri temizliği"),
+    renderDataManagementSection(),
     el("div", { className: "settings-block" }, [
       el("p", {
         text: "Tüm veri bu tarayıcının localStorage alanındadır (araç, bakım, yakıt, masraf, hatırlatıcı). Sunucuya veya üçüncü tarafa gitmez.",

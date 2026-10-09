@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "brands": [
+    {
+      "slug": "renault",
+      "label": "Renault",
+      "models": [
+        {
+          "slug": "megane-3",
+          "trimsPath": "metadata/brands/renault/models/megane-3/trims.json"
+        }
+      ]
+    }
+  ]
+}

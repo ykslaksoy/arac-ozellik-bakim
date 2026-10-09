@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "vehicleRef": {
+    "brandSlug": "renault",
+    "brandLabel": "Renault",
+    "modelSlug": "megane-3",
+    "modelLabel": "Megane III",
+    "paketSlug": "dynamique",
+    "paketLabel": "Dynamique",
+    "year": 2012
+  },
+  "featurePackId": "renault.megane3.dynamique.tr",
+  "ecuSetId": "renault-megane3-phase2-comfort",
+  "userNotes": "",
+  "commandSummaries": [],
+  "arizaKayitlari": [],
+  "byod": {
+    "databaseImported": false,
+    "fingerprintSha256": null,
+    "importedAt": null
+  }
+}

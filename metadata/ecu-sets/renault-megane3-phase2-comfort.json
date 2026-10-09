@@ -1,0 +1,25 @@
+{
+  "id": "renault-megane3-phase2-comfort",
+  "labelTr": "Megane III — konfor ve gösterge paketi",
+  "descriptionTr": "Arşiv eşleme desenleri; kullanıcı arayüzünde dosya adı veya OEM kısaltması gösterilmez.",
+  "modules": [
+    {
+      "modul_id": "instrument-cluster-01",
+      "modul_tr": "Gösterge paneli",
+      "id_hex": "742",
+      "ecuFilePatterns": ["742_*.xml", "742*.xml"]
+    },
+    {
+      "modul_id": "body-comfort-01",
+      "modul_tr": "Gövde ve konfor",
+      "id_hex": "745",
+      "ecuFilePatterns": ["745_*.xml", "745*.xml"]
+    },
+    {
+      "modul_id": "multimedia-01",
+      "modul_tr": "Multimedya ve radyo",
+      "id_hex": "7F6",
+      "ecuFilePatterns": ["7F6_*.xml", "7f6_*.xml"]
+    }
+  ]
+}
