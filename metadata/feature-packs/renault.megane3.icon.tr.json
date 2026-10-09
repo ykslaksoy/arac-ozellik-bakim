@@ -1,0 +1,24 @@
+{
+  "id": "renault.megane3.icon.tr",
+  "locale": "tr",
+  "trimRef": "icon",
+  "features": [
+    {
+      "featureId": "kadran_selamlama",
+      "label": "Kadran selamlama",
+      "summary": "Açılışta gösterge selamlama animasyonu (varsa donanım)."
+    },
+    {
+      "featureId": "otomatik_kilit",
+      "label": "Otomatik kilit",
+      "summary": "Hız veya park durumuna bağlı kilit davranışı."
+    }
+  ],
+  "ddt4allMapping": [
+    {
+      "featureId": "kadran_selamlama",
+      "ecuFilePatternRef": "sha256:anon:7f3a9c2e1b004d8a6e5f9012345678abcdef0123456789abcdef01234567",
+      "screenId": "PLACEHOLDER_SCREEN_DASH_GREETING"
+    }
+  ]
+}

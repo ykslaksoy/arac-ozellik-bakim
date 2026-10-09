@@ -1,0 +1,30 @@
+{
+  "modelId": "renault-megane-3",
+  "displayName": "Megane III",
+  "trims": [
+    {
+      "id": "joy",
+      "label": "Joy",
+      "yearFrom": 2008,
+      "yearTo": 2012,
+      "featurePackId": "renault.megane3.joy.tr",
+      "ecuSetId": "renault-megane3-phase2-comfort"
+    },
+    {
+      "id": "icon",
+      "label": "Icon",
+      "yearFrom": 2009,
+      "yearTo": 2014,
+      "featurePackId": "renault.megane3.icon.tr",
+      "ecuSetId": "renault-megane3-phase2-comfort"
+    },
+    {
+      "id": "dynamique",
+      "label": "Dynamique",
+      "yearFrom": 2008,
+      "yearTo": 2013,
+      "featurePackId": "renault.megane3.dynamique.tr",
+      "ecuSetId": "renault-megane3-phase2-comfort"
+    }
+  ]
+}

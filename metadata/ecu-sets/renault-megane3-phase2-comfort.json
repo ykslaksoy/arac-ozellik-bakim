@@ -1,0 +1,31 @@
+{
+  "id": "renault-megane3-phase2-comfort",
+  "label": "Megane III Faz 2 — Comfort / gösterge seti (desen)",
+  "description": "Yalnızca dosya adı glob desenleri; zip içeriği repoda değildir.",
+  "ecus": [
+    {
+      "role": "dashboard",
+      "logicalAddress": "742",
+      "ecuFilePatterns": [
+        "742_*.xml",
+        "742*.xml"
+      ]
+    },
+    {
+      "role": "bcm",
+      "logicalAddress": "745",
+      "ecuFilePatterns": [
+        "745_*.xml",
+        "745*.xml"
+      ]
+    },
+    {
+      "role": "radio",
+      "logicalAddress": "7F6",
+      "ecuFilePatterns": [
+        "7F6_*.xml",
+        "7f6_*.xml"
+      ]
+    }
+  ]
+}
