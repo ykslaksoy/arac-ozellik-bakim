@@ -1,5 +1,5 @@
 /**
- * BYOD ECU veritabanı — yalnızca cihazda saklama ve yasal onay.
+ * BYOD ECU veritabanı — yalnızca cihazda saklama ve kullanıcı onayı.
  * Zip içeriği bu modülde parse edilmez (ileriki faz).
  */
 
@@ -23,10 +23,10 @@ function writeRecord(record) {
 }
 
 /**
- * Kullanıcının yasal kaynağa sahip olduğunu onayladığını kaydeder.
+ * Kullanıcının veri kaynağı onayını kaydeder.
  * @param {boolean} accepted
  */
-export function importLegalConsent(accepted) {
+export function recordDataSourceConsent(accepted) {
   if (!accepted) {
     localStorage.removeItem(CONSENT_KEY);
     return { ok: false, consentedAt: null };
@@ -42,7 +42,7 @@ export function importLegalConsent(accepted) {
 /**
  * @returns {{ accepted: boolean, consentedAt: string | null }}
  */
-export function getLegalConsent() {
+export function getDataSourceConsent() {
   try {
     const raw = localStorage.getItem(CONSENT_KEY);
     if (!raw) return { accepted: false, consentedAt: null };
@@ -62,9 +62,9 @@ export function getLegalConsent() {
  * @param {{ fileName: string, fingerprintSha256: string, importedAt?: string }} meta
  */
 export function saveFingerprint(meta) {
-  const consent = getLegalConsent();
+  const consent = getDataSourceConsent();
   if (!consent.accepted) {
-    return { ok: false, error: "LEGAL_CONSENT_REQUIRED" };
+    return { ok: false, error: "USER_CONSENT_REQUIRED" };
   }
   if (!meta?.fileName || !meta?.fingerprintSha256) {
     return { ok: false, error: "INVALID_META" };
@@ -87,17 +87,17 @@ export function hasImportedDatabase() {
 
 /**
  * @returns {{
- *   policySummary: string,
+ *   standardsSummary: string,
  *   consent: { accepted: boolean, consentedAt: string | null },
  *   import: { imported: boolean, fileName: string | null, fingerprintSha256: string | null, importedAt: string | null }
  * }}
  */
-export function getLegalStatus() {
+export function getByodDataStatus() {
   const record = readRecord();
-  const consent = getLegalConsent();
+  const consent = getDataSourceConsent();
   return {
-    policySummary:
-      "ECU arşivleri repoda dağıtılmaz; yalnızca yasal kaynağınızdan cihazınıza aktarın.",
+    standardsSummary:
+      "ECU arşivleri repoda dağıtılmaz; kaynağınızdan yalnızca cihazınıza aktarın.",
     consent,
     import: {
       imported: Boolean(record?.imported),

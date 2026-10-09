@@ -16,11 +16,11 @@ globalThis.localStorage = {
 
 const {
   BYOD_STORAGE_KEY,
-  importLegalConsent,
+  recordDataSourceConsent,
   saveFingerprint,
   hasImportedDatabase,
-  getLegalStatus,
-  getLegalConsent,
+  getByodDataStatus,
+  getDataSourceConsent,
   clearByodDatabase,
   sha256Hex,
 } = await import("../js/byodDatabase.js");
@@ -32,13 +32,13 @@ test("onay olmadan parmak izi kaydedilemez", () => {
     fingerprintSha256: "abc123",
   });
   assert.equal(result.ok, false);
-  assert.equal(result.error, "LEGAL_CONSENT_REQUIRED");
+  assert.equal(result.error, "USER_CONSENT_REQUIRED");
   assert.equal(hasImportedDatabase(), false);
 });
 
 test("onay sonrası parmak izi ve durum", async () => {
   clearByodDatabase();
-  const consent = importLegalConsent(true);
+  const consent = recordDataSourceConsent(true);
   assert.equal(consent.ok, true);
   assert.ok(consent.consentedAt);
 
@@ -51,7 +51,7 @@ test("onay sonrası parmak izi ve durum", async () => {
   assert.equal(saved.ok, true);
   assert.equal(hasImportedDatabase(), true);
 
-  const status = getLegalStatus();
+  const status = getByodDataStatus();
   assert.equal(status.consent.accepted, true);
   assert.equal(status.import.imported, true);
   assert.equal(status.import.fileName, "my-ecu-archive.zip");
@@ -64,9 +64,9 @@ test("onay sonrası parmak izi ve durum", async () => {
 });
 
 test("onay kaldırıldığında consent temizlenir", () => {
-  importLegalConsent(true);
-  importLegalConsent(false);
-  assert.equal(getLegalConsent().accepted, false);
+  recordDataSourceConsent(true);
+  recordDataSourceConsent(false);
+  assert.equal(getDataSourceConsent().accepted, false);
 });
 
 test("sha256Hex tutarlı", async () => {

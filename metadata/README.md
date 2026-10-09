@@ -42,4 +42,4 @@ Kullanıcı arayüzü: yalnızca `modul_tr`. Uzman adresi yalnızca gizli `<deta
 
 ## BYOD
 
-Gerçek arşiv cihazda. Ayrıntı: `DATA_POLICY.md`.
+Gerçek arşiv cihazda. Ayrıntı: `VERI_STANDARTLARI.md`.

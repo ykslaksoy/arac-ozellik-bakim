@@ -1,14 +1,14 @@
-# Veri ve telif politikası — SüperAraç
+# Veri standartları — SüperAraç
 
-Bu belge, SüperAraç uygulamasının ve bu depodaki **kamuya açık** içeriklerin hangi verileri taşıyabileceğini tanımlar. Amaç: kullanıcıların kendi yasal kaynaklarından getirdiği (BYOD — *Bring Your Own Data*) ECU/tanı verilerini kullanabilmesi; telifli veya lisans kısıtlı OEM içeriğinin ise **yeniden dağıtımını** engellemek.
+Bu belge, SüperAraç uygulamasının ve bu depodaki **kamuya açık** içeriklerin hangi verileri taşıyabileceğini tanımlar. Amaç: kullanıcıların kendi kaynaklarından getirdiği (BYOD — *Bring Your Own Data*) ECU/tanı verilerini kullanabilmesi; telifli veya lisans kısıtlı OEM içeriğinin ise **yeniden dağıtımını** engellemek.
 
-## BYOD (kendi verinizi getirin)
+## Veri yönetimi (BYOD)
 
 - ECU veritabanı arşivleri (ör. `ecu.zip`, DDT2000 uyumlu XML paketleri) **uygulama veya repo ile birlikte dağıtılmaz**.
-- Kullanıcı, yasal olarak edinmiş olduğu arşivi **yalnızca kendi cihazında** içe aktarır.
+- Kullanıcı, edinmiş olduğu arşivi **yalnızca kendi cihazında** içe aktarır.
 - İçe aktarma öncesi uygulama, kaynağa sahip olduğunuzu onaylamanızı ister; bu onay cihazda saklanır.
 
-## Yasaklar (depo, APK ve kamu dağıtım)
+## Depo ve dağıtım sınırları
 
 Aşağıdakiler **public Git deposuna**, **yayınlanan web/APK paketine** veya **Drive / paylaşım linki olarak paketlenmiş dağıtıma** **girmemelidir**:
 
@@ -20,10 +20,10 @@ Aşağıdakiler **public Git deposuna**, **yayınlanan web/APK paketine** veya *
 
 Bu kurallar, kullanıcıların kendi cihazında BYOD yapmasını engellemez; yalnızca **bizim yeniden dağıtımımızı** kısıtlar.
 
-## Kullanıcı sorumluluğu
+## Telif ve kaynak sorumluluğu
 
 - İçe aktardığınız arşivin lisans ve telif şartlarına **siz** uymakla yükümlüsünüz.  
-- Yasal kaynağınız yoksa arşivi içe aktarmayın.  
+- Kaynağa sahip değilseniz arşivi içe aktarmayın.  
 - Cihazınızdaki verinin güvenliği ve yedeklemesi size aittir.
 
 ## Geliştirici fixture ayrımı
@@ -58,8 +58,8 @@ Kullanıcıya sunulan katman:
 
 Repoda `id_hex` ve glob desenler **yalnızca** BYOD arşivi ile eşleme için tutulur; APK/repo dağıtımı bunları kullanıcıya sızdırmaz.
 
-## İletişim ve güncellemeler
+## Güncellemeler
 
-Politika değişiklikleri bu dosyada yayımlanır. Uygulama içi **Ayarlar → Veri ve telif** bölümü özet bilgi verir; tam metin için depo kökündeki bu dosyaya bakın.
+Standart değişiklikleri bu dosyada yayımlanır. Uygulama içi **Ayarlar → Veri yönetimi** bölümü özet bilgi verir; tam metin için depo kökündeki bu dosyaya bakın.
 
 **Repo:** https://github.com/ykslaksoy/arac-ozellik-bakim

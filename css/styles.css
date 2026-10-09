@@ -1030,7 +1030,7 @@ table.data th {
   word-break: break-all;
 }
 
-.legal-banner {
+.data-notice-banner {
   background: #fff4e5;
   border: 1px solid #f0c36d;
   border-radius: 12px;
@@ -1039,17 +1039,12 @@ table.data th {
   font-size: 0.9rem;
 }
 
-.legal-banner strong {
-  display: block;
-  margin-bottom: 0.35rem;
-}
-
-.legal-banner p {
+.data-notice-banner p {
   margin: 0 0 0.5rem;
   color: var(--ink-soft);
 }
 
-.legal-banner-link {
+.data-notice-banner-link {
   font-weight: 600;
   color: var(--accent, #0d6efd);
   text-decoration: none;

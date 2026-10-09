@@ -53,9 +53,9 @@ import {
 import {
   clearByodDatabase,
   fingerprintZipFile,
-  getLegalStatus,
+  getByodDataStatus,
   hasImportedDatabase,
-  importLegalConsent,
+  recordDataSourceConsent,
   saveFingerprint,
 } from "./byodDatabase.js";
 import {
@@ -721,25 +721,20 @@ function renderPlaceholder(title, text) {
   );
 }
 
-function legalWarningBanner(extraText) {
-  return el("div", { className: "legal-banner", role: "note" }, [
-    el("strong", { text: "Yasal uyarı" }),
-    el("p", {
-      text:
-        extraText ||
-        "Gizli özellik ve ECU ekranları yalnızca sizin yasal olarak edindiğiniz veritabanı ile çalışır. Repo veya APK içinde ecu.zip / DDT XML dağıtılmaz.",
-    }),
+function dataNoticeBanner(message) {
+  return el("div", { className: "data-notice-banner", role: "note" }, [
+    el("p", { text: message }),
     el("a", {
       href: "#/ayarlar",
       "data-nav": "",
-      className: "legal-banner-link",
-      text: "Veri ve telif ayarları",
+      className: "data-notice-banner-link",
+      text: "Veri yönetimi",
     }),
   ]);
 }
 
-function renderDataAndCopyrightSection() {
-  const status = getLegalStatus();
+function renderDataManagementSection() {
+  const status = getByodDataStatus();
   let consentChecked = status.consent.accepted;
   const statusLine = el("p", {
     className: "byod-status mono",
@@ -753,8 +748,8 @@ function renderDataAndCopyrightSection() {
   consentInput.checked = consentChecked;
   consentInput.addEventListener("change", () => {
     consentChecked = consentInput.checked;
-    importLegalConsent(consentChecked);
-    statusLine.textContent = getLegalStatus().import.imported
+    recordDataSourceConsent(consentChecked);
+    statusLine.textContent = getByodDataStatus().import.imported
       ? statusLine.textContent
       : "Henüz ECU veritabanı içe aktarılmadı.";
   });
@@ -762,7 +757,7 @@ function renderDataAndCopyrightSection() {
     consentInput,
     el("span", {
       text:
-        "ECU veritabanı arşivine yasal olarak sahip olduğumu ve yalnızca kendi cihazımda kullanacağımı onaylıyorum.",
+        "Bu dosyanın kullanım hakkına sahip olduğumu ve verilerin yalnızca cihazımda işleneceğini onaylıyorum.",
     }),
   );
 
@@ -775,8 +770,8 @@ function renderDataAndCopyrightSection() {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (!getLegalStatus().consent.accepted) {
-      alert("Önce yasal onay kutusunu işaretleyin.");
+    if (!getByodDataStatus().consent.accepted) {
+      alert("Önce onay kutusunu işaretleyin.");
       return;
     }
     try {
@@ -805,7 +800,7 @@ function renderDataAndCopyrightSection() {
     className: "btn btn-ghost",
     text: "BYOD kaydını temizle",
     onClick: () => {
-      if (!hasImportedDatabase() && !getLegalStatus().consent.accepted) return;
+      if (!hasImportedDatabase() && !getByodDataStatus().consent.accepted) return;
       if (!confirm("Cihazdaki ECU içe aktarma kaydı ve onay silinsin mi?")) return;
       clearByodDatabase();
       consentInput.checked = false;
@@ -818,16 +813,16 @@ function renderDataAndCopyrightSection() {
   const bullets = el("ul", { className: "byod-bullets" });
   for (const line of [
     "ECU zip ve DDT XML repoda veya APK’da yoktur (BYOD).",
-    "Yalnızca yasal kaynağınızdan aldığınız arşivi cihaza aktarın.",
+    "Kaynağınızdan aldığınız arşivi yalnızca cihaza aktarın.",
     "İçe aktarma meta verisi (dosya adı, SHA-256) bu cihazda saklanır.",
     "Drive linki veya üçüncü taraf paket dağıtımı desteklenmez.",
-    "Tam politika: github.com/ykslaksoy/arac-ozellik-bakim → DATA_POLICY.md",
+    "Tam metin: github.com/ykslaksoy/arac-ozellik-bakim → VERI_STANDARTLARI.md",
   ]) {
     bullets.append(el("li", { text: line }));
   }
 
   return el("section", { className: "settings-block byod-block" }, [
-    el("h2", { className: "settings-subtitle", text: "Veri ve telif" }),
+    el("h2", { className: "settings-subtitle", text: "Veri yönetimi" }),
     bullets,
     consentRow,
     el("div", { className: "cta-row", style: "margin:0.75rem 0" }, [
@@ -846,14 +841,14 @@ function renderDataAndCopyrightSection() {
 function renderGizli() {
   const wrap = el("div", { className: "page-pad" });
   wrap.append(
-    legalWarningBanner(
-      "Bu bölümdeki gizli özellikler, cihazınıza içe aktardığınız yasal veritabanı ve kamu metadata ile eşleşecektir.",
+    dataNoticeBanner(
+      "Üretici tanımları cihazınızda; ekranda yalnızca marka, model ve paket bilgisi gösterilir.",
     ),
     sectionHead(
       "Gizli özellik",
       hasImportedDatabase()
         ? "Veritabanı kaydı var; özellik listesi yakında metadata ile bağlanacak."
-        : "Önce Ayarlar → Veri ve telif üzerinden arşivinizi içe aktarın.",
+        : "Önce Ayarlar → Veri yönetimi üzerinden arşivinizi içe aktarın.",
     ),
   );
   app.append(wrap);
@@ -1195,7 +1190,7 @@ function renderReminders() {
 function renderSettings() {
   app.append(
     sectionHead("Ayarlar", "Yedekleme, BYOD veritabanı ve veri temizliği"),
-    renderDataAndCopyrightSection(),
+    renderDataManagementSection(),
     el("div", { className: "settings-block" }, [
       el("p", {
         text: "Tüm veri bu tarayıcının localStorage alanındadır (araç, bakım, yakıt, masraf, hatırlatıcı). Sunucuya veya üçüncü tarafa gitmez.",

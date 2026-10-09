@@ -26,4 +26,4 @@ data/vehicles/{marka-slug}/{model-slug}/{paket-slug}/profile.json
 
 Kullanıcıya **UCH**, **BCM**, dosya adı (`742_*.xml`) veya `beyin_adi` tarzı metinler **gösterilmez**. Yalnızca `modul_tr` (ör. "Gövde ve konfor") ve marka/model/paket bağlamı.
 
-Tam politika: `DATA_POLICY.md`.
+Veri standartları: `VERI_STANDARTLARI.md`.
