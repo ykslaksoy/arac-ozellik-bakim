@@ -343,7 +343,7 @@ function bindHeroCarousel(stage, track, dots, length) {
     const dx = e.clientX - startX;
     const w = heroStageWidth(stage) || 1;
     const visual = heroVisualIndex(origin, length);
-    track.style.transform = `translate3d(${-(visual * w) - dx}px, 0, 0)`;
+    track.style.transform = `translate3d(${-(visual * w) + dx}px, 0, 0)`;
   });
   const end = (e) => {
     if (!dragging) return;
