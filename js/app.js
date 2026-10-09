@@ -50,6 +50,8 @@ import {
   formatPumpHint,
   loadFuelPrices,
 } from "./fuelPrices.js";
+import { renderGizliPage } from "./gizliPage.js";
+import { renderArizaPage } from "./arizaPage.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
 const BAKIM_TUR = [
@@ -141,8 +143,8 @@ function route() {
   else if (path === "/hatirlaticilar") renderReminders();
   else if (path === "/ayarlar") renderSettings();
   else if (path === "/tara") renderPlaceholder("Tara", "Plaka veya evrak taraması yakında. Viewfinder ile belge çekeceksiniz.");
-  else if (path === "/ariza") renderPlaceholder("Arıza", "Arıza kayıtları yakında. OBD bağlantısı yok; kodları elle girebilirsiniz.");
-  else if (path === "/gizli") renderPlaceholder("Gizli özellik", "Gizli özellik listesi yakında. Bu ekran yalnızca yer tutucudur.");
+  else if (path === "/ariza") void renderArizaPage(app, pageDeps());
+  else if (path === "/gizli") void renderGizliPage(app, pageDeps());
   else if (path === "/ekspertiz") renderPlaceholder("Ekspertiz", "Ekspertiz notları yakında. Hasar ve ekspertiz kaydı burada tutulacak.");
   else if (path === "/performans") renderPlaceholder("Performans", "Tüketim ve masraf eğrisi yakında. Özet sayfasındaki veriler korunur.");
   else renderHome();
@@ -703,6 +705,29 @@ function renderPlaceholder(title, text) {
       sectionHead(title, text),
     ]),
   );
+}
+
+function pageDeps() {
+  return {
+    el,
+    sectionHead,
+    emptyState,
+    state,
+    pickVehicle: () => {
+      if (filterVehicleId) return vehicleById(filterVehicleId);
+      const megane = state.vehicles.find((v) => v.id === "demo-megane");
+      return megane || state.vehicles[0];
+    },
+    toast: showToast,
+  };
+}
+
+function showToast(message) {
+  const existing = document.querySelector(".app-toast");
+  if (existing) existing.remove();
+  const toast = el("div", { className: "app-toast", text: message, role: "status" });
+  document.querySelector(".phone")?.append(toast);
+  window.setTimeout(() => toast.remove(), 4200);
 }
 
 function stat(label, value) {

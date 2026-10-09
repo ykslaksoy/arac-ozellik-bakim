@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "arac_profili": "renault-megane-3-icon-uds",
+    "marka": "Renault",
+    "model": "Megane 3",
+    "kasa": "SW",
+    "trim": "Icon",
+    "protokol": "UDS",
+    "versiyon": 1,
+    "not": "Icon donanımı için doğrulanmış gizli özellik seti; Joy/test havuzu ayrı işaretlenir."
+  },
+  "gizli_ozellikler": [
+    {
+      "ozellik_id": "kadran_selamlama",
+      "isim_tr": "Kadran selamlama",
+      "kategori": "Görünüm",
+      "aciklama_tr": "Kontak açılışında gösterge kadranında selamlama animasyonu.",
+      "is_standard_for_trim": true,
+      "beyin_adresi_hex": "742",
+      "istek_kodu_hex": "2E2001",
+      "aktif_deger_hex": "01",
+      "pasif_deger_hex": "00",
+      "kaynak": "catalog"
+    },
+    {
+      "ozellik_id": "otomatik_kilit",
+      "isim_tr": "Otomatik kilit (hız)",
+      "kategori": "Güvenlik",
+      "aciklama_tr": "Belirli hızın üzerinde kapıların otomatik kilitlenmesi.",
+      "is_standard_for_trim": true,
+      "beyin_adresi_hex": "742",
+      "istek_kodu_hex": "2E2010",
+      "aktif_deger_hex": "01",
+      "pasif_deger_hex": "00",
+      "kaynak": "catalog"
+    },
+    {
+      "ozellik_id": "ayna_otomatik_katlama",
+      "isim_tr": "Ayna otomatik katlama",
+      "kategori": "Konfor",
+      "aciklama_tr": "Kontak kapatıldığında yan aynaların katlanması.",
+      "is_standard_for_trim": true,
+      "beyin_adresi_hex": "742",
+      "istek_kodu_hex": "2E2022",
+      "aktif_deger_hex": "01",
+      "pasif_deger_hex": "00",
+      "kaynak": "catalog"
+    },
+    {
+      "ozellik_id": "otomatik_kilit_ses_seviyesi",
+      "isim_tr": "Otomatik kilit ses seviyesi",
+      "kategori": "Ses",
+      "aciklama_tr": "Joy/test donanımlarda kilit onay sesinin seviyesi (Icon havuzunda referans).",
+      "is_standard_for_trim": false,
+      "beyin_adresi_hex": "742",
+      "istek_kodu_hex": "2E2035",
+      "aktif_deger_hex": "02",
+      "pasif_deger_hex": "01",
+      "kaynak": "catalog"
+    },
+    {
+      "ozellik_id": "yolcu_airbag_devre",
+      "isim_tr": "Yolcu hava yastığı devre dışı",
+      "kategori": "Güvenlik",
+      "aciklama_tr": "Ön yolcu hava yastığının geçici devre dışı bırakılması (çocuk koltuğu senaryosu).",
+      "is_standard_for_trim": false,
+      "beyin_adresi_hex": "752",
+      "istek_kodu_hex": "2E2100",
+      "aktif_deger_hex": "00",
+      "pasif_deger_hex": "01",
+      "kaynak": "catalog"
+    }
+  ],
+  "diagnostik_sozlugu": [
+    {
+      "kod": "P0420",
+      "aciklama_tr": "Katalitik dönüştürücü verimliliği düşük (Bank 1)"
+    },
+    {
+      "kod": "U1000",
+      "aciklama_tr": "CAN ağı iletişim hatası / ECU yanıt vermiyor"
+    },
+    {
+      "kod": "DF001",
+      "aciklama_tr": "Renault özel: enjeksiyon sistemi uyarısı (örnek)"
+    }
+  ]
+}
