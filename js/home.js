@@ -17,7 +17,7 @@ export const DEMO_MEGANE_YEAR = "2012";
  * Saat yönünün tersi turntable — arabanın solu/sağı:
  * 1 ön → 2 sol çapraz → 3 sol → 4 sol arka çapraz → 5 arka →
  * 6 arka sağ çapraz → 7 sağ → 8 sağ ön çapraz → (ön).
- * Sağ ok / sola kaydırma = +1. Varsayılan index = ön.
+ * Sağ ok / sağa kaydırma = +1; sola kaydırma / sol ok = -1. Varsayılan index = ön.
  */
 export const DEFAULT_HERO_GALLERY = [
   { id: "front", src: "assets/orbit-m3-0-front.jpg", label: "Önden", guide: "Tam karşıdan çekim" },

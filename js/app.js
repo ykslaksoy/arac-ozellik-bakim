@@ -324,6 +324,7 @@ function setHeroTrack(track, index, length, options = {}) {
 
 function bindHeroCarousel(stage, track, dots, length) {
   let startX = 0;
+  let lastDx = 0;
   let dragging = false;
   let origin = 0;
 
@@ -350,6 +351,7 @@ function bindHeroCarousel(stage, track, dots, length) {
     if (e.target.closest(".foto-chip, .hero-dots, .hero-nav, button")) return;
     dragging = true;
     startX = e.clientX;
+    lastDx = 0;
     origin = heroSlideIndex;
     stage.classList.add("is-dragging");
     stage.setPointerCapture(e.pointerId);
@@ -357,18 +359,18 @@ function bindHeroCarousel(stage, track, dots, length) {
   stage.addEventListener("pointermove", (e) => {
     if (!dragging) return;
     const dx = e.clientX - startX;
+    lastDx = dx;
     const w = heroStageWidth(stage) || 1;
     const visual = heroVisualIndex(origin, length);
-    track.style.transform = `translate3d(${-(visual * w) + dx}px, 0, 0)`;
+    track.style.transform = `translate3d(${-(visual * w) - dx}px, 0, 0)`;
   });
   const end = (e) => {
     if (!dragging) return;
     dragging = false;
     stage.classList.remove("is-dragging");
-    const dx = e.clientX - startX;
-    // Sola kaydır = sonraki açı (+1); sağa kaydır = önceki (-1)
-    if (dx < -40) go(origin + 1);
-    else if (dx > 40) go(origin - 1);
+    const dx = e.pointerType === "mouse" ? e.clientX - startX : lastDx;
+    if (dx < -40) go(origin - 1);
+    else if (dx > 40) go(origin + 1);
     else go(origin);
   };
   stage.addEventListener("pointerup", end);

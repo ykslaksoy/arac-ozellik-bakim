@@ -186,7 +186,7 @@ body {
   padding: 0;
   height: clamp(18rem, 56vw, 25.5rem);
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: none;
   outline: none;
   background: #f3f5f6;
 }
