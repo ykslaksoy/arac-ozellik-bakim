@@ -17,7 +17,7 @@ export const DEMO_MEGANE_YEAR = "2012";
  * Saat yönünün tersi turntable — arabanın solu/sağı:
  * 1 ön → 2 sol çapraz → 3 sol → 4 sol arka çapraz → 5 arka →
  * 6 arka sağ çapraz → 7 sağ → 8 sağ ön çapraz → (ön).
- * Sağ ok / sağa kaydırma = +1; sola kaydırma / sol ok = -1. Varsayılan index = ön.
+ * Turntable: sola kaydırma veya sol ok = arabanın soluna (+1). Sağa = -1. Varsayılan = ön.
  */
 export const DEFAULT_HERO_GALLERY = [
   { id: "front", src: "assets/orbit-m3-0-front.jpg", label: "Önden", guide: "Tam karşıdan çekim" },
@@ -317,7 +317,17 @@ export function nextHeroIndex(index, length, delta = 1) {
   return clampHeroIndex((Number(index) || 0) + delta, length);
 }
 
-/** Sağ ok / sola kaydırma (+1) ile gelen sonraki galeri id'leri. */
+/**
+ * Parmağı sola kaydırma (+1) ile gelen sonraki galeri id'leri (sol çapraz, sol yan…).
+ * @param {number} [threshold]
+ */
+export function resolveHeroSwipeDelta(dx, threshold = 40) {
+  if (dx < -threshold) return 1;
+  if (dx > threshold) return -1;
+  return 0;
+}
+
+/** Sola kaydırma (+1) ile gelen sonraki galeri id'leri. */
 export function dragRightHeroIds(fromIndex = DEFAULT_HERO_INDEX) {
   const n = DEFAULT_HERO_GALLERY.length;
   return [1, 2].map((delta) => DEFAULT_HERO_GALLERY[nextHeroIndex(fromIndex, n, delta)].id);

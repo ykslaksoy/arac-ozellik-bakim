@@ -30,6 +30,7 @@ import {
   loopedHeroSlides,
   nextHeroIndex,
   dragRightHeroIds,
+  resolveHeroSwipeDelta,
   homeMetrics,
   homeVehicle,
   maybeSeedDemo,
@@ -132,6 +133,9 @@ test("hero galeri: sol dönüş ön → sol çapraz → … → sağ ön; Megane
     "left-three-quarter",
     "left-side",
   ]);
+  assert.equal(resolveHeroSwipeDelta(-50), 1);
+  assert.equal(resolveHeroSwipeDelta(50), -1);
+  assert.equal(resolveHeroSwipeDelta(10), 0);
   const tour = [];
   let i = 0;
   for (let step = 0; step < 8; step++) {

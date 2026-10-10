@@ -32,6 +32,7 @@ import {
   heroImageSrc,
   heroSlides,
   heroVisualIndex,
+  resolveHeroSwipeDelta,
   homeMetrics,
   homeVehicle,
   iconSvg,
@@ -362,23 +363,23 @@ function bindHeroCarousel(stage, track, dots, length) {
     lastDx = dx;
     const w = heroStageWidth(stage) || 1;
     const visual = heroVisualIndex(origin, length);
-    track.style.transform = `translate3d(${-(visual * w) - dx}px, 0, 0)`;
+    track.style.transform = `translate3d(${-(visual * w) + dx}px, 0, 0)`;
   });
   const end = (e) => {
     if (!dragging) return;
     dragging = false;
     stage.classList.remove("is-dragging");
     const dx = e.pointerType === "mouse" ? e.clientX - startX : lastDx;
-    if (dx < -40) go(origin - 1);
-    else if (dx > 40) go(origin + 1);
+    const delta = resolveHeroSwipeDelta(dx);
+    if (delta) go(origin + delta);
     else go(origin);
   };
   stage.addEventListener("pointerup", end);
   stage.addEventListener("pointercancel", end);
 
   stage.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") go(heroSlideIndex + 1);
-    if (e.key === "ArrowLeft") go(heroSlideIndex - 1);
+    if (e.key === "ArrowLeft") go(heroSlideIndex + 1);
+    if (e.key === "ArrowRight") go(heroSlideIndex - 1);
   });
 
   stage._heroGo = go;
@@ -613,13 +614,13 @@ function renderHome() {
   const prevBtn = el("button", {
     type: "button",
     className: "hero-nav hero-nav-prev",
-    "aria-label": "Önceki açı",
+    "aria-label": "Sola çevir",
   });
   prevBtn.innerHTML = iconSvg("chevronLeft");
   const nextBtn = el("button", {
     type: "button",
     className: "hero-nav hero-nav-next",
-    "aria-label": "Sonraki açı",
+    "aria-label": "Sağa çevir",
   });
   nextBtn.innerHTML = iconSvg("chevronRight");
 
@@ -639,7 +640,7 @@ function renderHome() {
     e.stopPropagation();
     if (navLock) return;
     navLock = true;
-    stage._heroGo?.(heroSlideIndex - 1);
+    stage._heroGo?.(heroSlideIndex + 1);
     setTimeout(() => {
       navLock = false;
     }, 260);
@@ -649,7 +650,7 @@ function renderHome() {
     e.stopPropagation();
     if (navLock) return;
     navLock = true;
-    stage._heroGo?.(heroSlideIndex + 1);
+    stage._heroGo?.(heroSlideIndex - 1);
     setTimeout(() => {
       navLock = false;
     }, 260);
