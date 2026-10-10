@@ -11,19 +11,19 @@
   },
   "featurePackId": "renault.megane3.icon.tr",
   "ecuSetId": "renault-megane3-phase2-comfort",
-  "userNotes": "Icon paket — kadran selamlama açık.",
+  "userNotes": "Icon paket — gösterge selamlaması açık.",
   "commandSummaries": [
     {
       "featureId": "kadran_selamlama",
       "modul_id": "instrument-cluster-01",
       "modul_tr": "Gösterge paneli",
-      "titleTr": "Kadran selamlama",
+      "titleTr": "Gösterge selamlaması",
       "stepsTr": [
-        "Tanı modunda Gösterge paneli modülünü seçin.",
-        "Selamlama ile ilgili menüyü açın.",
+        "Tanı modunda gösterge paneli modülünü seçin.",
+        "Gösterge selamlaması menüsünü açın.",
         "Değişiklikten önce mevcut ayarı not alın."
       ],
-      "riskTr": "Yanlış ayar gösterge davranışını etkileyebilir; yedek alın."
+      "riskTr": "Yanlış ayar kadran davranışını etkileyebilir; mümkünse yedek alın."
     }
   ],
   "arizaKayitlari": [
@@ -32,7 +32,7 @@
       "modul_id": "body-comfort-01",
       "modul_tr": "Gövde ve konfor",
       "kod": "B1000",
-      "aciklamaTr": "Örnek kayıt — gerçek kodları siz girersiniz.",
+      "aciklamaTr": "Örnek arıza kodu kaydı — gerçek kodları siz girersiniz.",
       "tarih": "2026-09-15"
     }
   ],

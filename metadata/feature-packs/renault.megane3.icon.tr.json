@@ -5,8 +5,8 @@
   "features": [
     {
       "featureId": "kadran_selamlama",
-      "label": "Kadran selamlama",
-      "summary": "Açılışta gösterge selamlama animasyonu (varsa donanım)."
+      "label": "Gösterge selamlaması",
+      "summary": "Kontağı açınca kadranda kısa selamlama animasyonu (donanıma bağlı)."
     },
     {
       "featureId": "otomatik_kilit",

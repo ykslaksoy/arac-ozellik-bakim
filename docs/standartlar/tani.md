@@ -6,6 +6,7 @@
 - [profil.md](profil.md) — `ecu-sets`, `arizaKayitlari`  
 - [baglanti.md](baglanti.md) — OBD bağlı / değil  
 - [islem-guvenligi.md](islem-guvenligi.md) — silme/yazma onayı, `riskTr`  
+- [terimler.md](terimler.md) — arıza kodu, modül adı, gizli özellik terimleri  
 
 ---
 

@@ -5,6 +5,7 @@
 - [STANDARTLAR.md](../../STANDARTLAR.md)  
 - [profil.md](profil.md) — demo Megane, orbit varsayılanları  
 - [tani.md](tani.md) — modül listesi metinleri  
+- [terimler.md](terimler.md) — Türkçe otomotiv/servis terimleri  
 - [performans.md](performans.md) — ana sayfa metrik şeridi  
 
 ---
@@ -44,7 +45,7 @@ Aktif sekme: `tabActive(path, route)` — kök `/` yalnızca tam eşleşme.
 
 ## Türkçe metin ve arama kuralları
 
-- Tüm kullanıcı metinleri Türkçe; teknik OEM kodları gizli katmanda ([tani.md](tani.md)).  
+- Tüm kullanıcı metinleri Türkçe; terim seçimi [terimler.md](terimler.md); OEM kodları gizli katmanda ([tani.md](tani.md)).  
 - Plaka: `normalizePlate` / `formatTrPlate` (`js/logic.js`) — TR kuralları, büyük harf.  
 - Marka listesi: sabit `MARKALAR` dizisi (alfabetik + “Diğer”).  
 - Model/araç eşleştirmede ileride arama için **NFD normalizasyonu** kullanılır (ör. `isMegane3Vehicle`: aksanları kaldır, küçük harf). Yeni filtreler aynı deseni izlemeli.

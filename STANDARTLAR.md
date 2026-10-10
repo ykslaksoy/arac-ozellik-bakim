@@ -6,6 +6,7 @@ Tek giriş kapısı: tüm ürün, veri ve yayın kuralları buradan birbirine ba
 
 ```mermaid
 flowchart LR
+  terimler["terimler.md\nTR otomotiv dili"]
   veri["veri.md\nBYOD, metadata"]
   profil["profil.md\nprofile.json, trims"]
   baglanti["baglanti.md\nOBD durumu"]
@@ -16,6 +17,9 @@ flowchart LR
   performans["performans.md\nL/100, yakıt API"]
   yayin["yayin.md\nVercel, test"]
 
+  terimler --> profil
+  terimler --> tani
+  terimler --> arayuz
   veri --> profil
   veri --> baglanti
   profil --> tani
@@ -32,6 +36,7 @@ flowchart LR
 
 | Standart | Dosya | Modül / route |
 |----------|--------|----------------|
+| Terimler (TR UI) | [docs/standartlar/terimler.md](docs/standartlar/terimler.md) | Tüm kullanıcı metinleri, `modul_tr`, feature pack, profil |
 | Veri ve BYOD | [docs/standartlar/veri.md](docs/standartlar/veri.md) | `#/ayarlar` (Veri yönetimi), `metadata/`, `data/vehicles/` |
 | Profil ve katalog | [docs/standartlar/profil.md](docs/standartlar/profil.md) | `metadata/_index.json`, `js/vehicleMetadata.js`, `#/ariza` |
 | Tanı ve arıza | [docs/standartlar/tani.md](docs/standartlar/tani.md) | `#/tara`, `#/ariza`, `#/gizli` |
@@ -44,14 +49,15 @@ flowchart LR
 
 ## Önerilen okuma sırası
 
-1. **Veri** — ne repoda, ne cihazda; BYOD sınırları  
-2. **Profil** — yeni paket ekleme, Megane örneği  
-3. **Bağlantı** — OBD’nin bugünkü durumu  
-4. **Tanı** — modül adları, arıza kaydı, simülasyon  
-5. **İşlem güvenliği** — yazma/silme onayları  
-6. **Arayüz** — orbit, sekmeler, Türkçe metin  
-7. **Bakım** ve **Performans** — kullanıcı kayıtları  
-8. **Yayın** — merge ve canlı site  
+1. **Terimler** — Türkçe otomotiv/servis dili, yasak çeviri kalıpları  
+2. **Veri** — ne repoda, ne cihazda; BYOD sınırları  
+3. **Profil** — yeni paket ekleme, Megane örneği  
+4. **Bağlantı** — OBD’nin bugünkü durumu  
+5. **Tanı** — modül adları, arıza kaydı, simülasyon  
+6. **İşlem güvenliği** — yazma/silme onayları  
+7. **Arayüz** — orbit, sekmeler, Türkçe metin  
+8. **Bakım** ve **Performans** — kullanıcı kayıtları  
+9. **Yayın** — merge ve canlı site  
 
 ## Kök yönlendirmeler
 

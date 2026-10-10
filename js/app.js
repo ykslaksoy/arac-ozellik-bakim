@@ -160,7 +160,7 @@ function route() {
   else if (path === "/ariza") renderAriza();
   else if (path === "/gizli") renderGizli();
   else if (path === "/ekspertiz") renderPlaceholder("Ekspertiz", "Ekspertiz notları yakında. Hasar ve ekspertiz kaydı burada tutulacak.");
-  else if (path === "/performans") renderPlaceholder("Performans", "Tüketim ve masraf eğrisi yakında. Özet sayfasındaki veriler korunur.");
+  else if (path === "/performans") renderPlaceholder("Performans", "Yakıt tüketimi ve masraf eğrisi yakında. Güç/performans grafikleri ayrı değerlendirilecek; özet sayfasındaki L/100 verileri korunur.");
   else renderHome();
 }
 
@@ -798,7 +798,7 @@ function renderDataManagementSection() {
   const clearBtn = el("button", {
     type: "button",
     className: "btn btn-ghost",
-    text: "BYOD kaydını temizle",
+    text: "İçe aktarma kaydını temizle",
     onClick: () => {
       if (!hasImportedDatabase() && !getByodDataStatus().consent.accepted) return;
       if (!confirm("Cihazdaki ECU içe aktarma kaydı ve onay silinsin mi?")) return;
@@ -812,11 +812,11 @@ function renderDataManagementSection() {
 
   const bullets = el("ul", { className: "byod-bullets" });
   for (const line of [
-    "ECU zip ve DDT XML repoda veya APK’da yoktur (BYOD).",
-    "Kaynağınızdan aldığınız arşivi yalnızca cihaza aktarın.",
-    "İçe aktarma meta verisi (dosya adı, SHA-256) bu cihazda saklanır.",
+    "ECU veritabanı arşivi (.zip) repoda veya uygulama paketinde yok; kendi veritabanınızı cihaza aktarırsınız (BYOD).",
+    "Edindiğiniz arşivi yalnızca bu cihaza içe aktarın; DDT/OEM XML dağıtılmaz.",
+    "İçe aktarma bilgisi (dosya adı, SHA-256) yalnızca bu cihazda saklanır.",
     "Drive linki veya üçüncü taraf paket dağıtımı desteklenmez.",
-    "Tüm standartlar: github.com/ykslaksoy/arac-ozellik-bakim/blob/main/STANDARTLAR.md",
+    "Standartlar: github.com/ykslaksoy/arac-ozellik-bakim → STANDARTLAR.md (terimler: docs/standartlar/terimler.md)",
   ]) {
     bullets.append(el("li", { text: line }));
   }
@@ -837,7 +837,7 @@ function renderDataManagementSection() {
     }),
     el("p", {
       className: "hint",
-      text: "Bu sürümde zip yalnızca parmak izi için okunur; tam parse sonraki fazda. Gizli özellik listesi metadata ile eşleşecek.",
+      text: "Bu sürümde arşiv yalnızca parmak izi için okunur; tam tanı eşlemesi sonraki fazda. Gizli özellik listesi metadata ile bağlanacak.",
     }),
   ]);
 }
@@ -846,13 +846,13 @@ function renderGizli() {
   const wrap = el("div", { className: "page-pad" });
   wrap.append(
     dataNoticeBanner(
-      "Üretici tanımları cihazınızda; ekranda yalnızca marka, model ve paket bilgisi gösterilir.",
+      "ECU tanım dosyaları yalnızca cihazınızda; ekranda marka, model ve paket adı gösterilir.",
     ),
     sectionHead(
       "Gizli özellik",
       hasImportedDatabase()
-        ? "Veritabanı kaydı var; özellik listesi yakında metadata ile bağlanacak."
-        : "Önce Ayarlar → Veri yönetimi üzerinden arşivinizi içe aktarın.",
+        ? "ECU veritabanı kaydı var; gizli özellik listesi yakında metadata ile bağlanacak."
+        : "Önce Ayarlar → Veri yönetimi bölümünden kendi ECU veritabanınızı içe aktarın.",
     ),
   );
   app.append(wrap);
@@ -863,7 +863,7 @@ function renderAriza() {
   wrap.append(
     sectionHead(
       "Arıza",
-      "OBD bağlantısı yok; kodları elle kaydedin. Modül adları Türkçedir.",
+      "OBD bağlı değil; arıza kodlarını elle kaydedin. Modül adları Türkçe servis dilindedir.",
     ),
     el("p", { className: "ariza-loading", text: "Profil ve modül listesi yükleniyor…" }),
   );
@@ -1193,7 +1193,7 @@ function renderReminders() {
 
 function renderSettings() {
   app.append(
-    sectionHead("Ayarlar", "Yedekleme, BYOD veritabanı ve veri temizliği"),
+    sectionHead("Ayarlar", "Yedekleme, kendi ECU veritabanınız ve veri temizliği"),
     renderDataManagementSection(),
     el("div", { className: "settings-block" }, [
       el("p", {
