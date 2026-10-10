@@ -816,7 +816,7 @@ function renderDataManagementSection() {
     "Kaynağınızdan aldığınız arşivi yalnızca cihaza aktarın.",
     "İçe aktarma meta verisi (dosya adı, SHA-256) bu cihazda saklanır.",
     "Drive linki veya üçüncü taraf paket dağıtımı desteklenmez.",
-    "Tam metin: github.com/ykslaksoy/arac-ozellik-bakim → VERI_STANDARTLARI.md",
+    "Tüm standartlar: github.com/ykslaksoy/arac-ozellik-bakim/blob/main/STANDARTLAR.md",
   ]) {
     bullets.append(el("li", { text: line }));
   }
@@ -831,6 +831,10 @@ function renderDataManagementSection() {
       fileInput,
     ]),
     statusLine,
+    el("p", {
+      className: "hint",
+      text: "Tüm standartlar: STANDARTLAR.md (repo) — https://github.com/ykslaksoy/arac-ozellik-bakim/blob/main/STANDARTLAR.md",
+    }),
     el("p", {
       className: "hint",
       text: "Bu sürümde zip yalnızca parmak izi için okunur; tam parse sonraki fazda. Gizli özellik listesi metadata ile eşleşecek.",

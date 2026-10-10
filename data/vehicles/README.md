@@ -2,6 +2,8 @@
 
 Üretici ECU veritabanı **burada değildir**. Her paket için ayrı klasör; yeni model/paket = yeni dizin, uygulama kodu minimum değişir.
 
+Standartlar: [STANDARTLAR.md](../../STANDARTLAR.md) · [docs/standartlar/profil.md](../../docs/standartlar/profil.md) · [docs/standartlar/veri.md](../../docs/standartlar/veri.md)
+
 ## Dizin kuralı
 
 ```
@@ -26,4 +28,4 @@ data/vehicles/{marka-slug}/{model-slug}/{paket-slug}/profile.json
 
 Kullanıcıya **UCH**, **BCM**, dosya adı (`742_*.xml`) veya `beyin_adi` tarzı metinler **gösterilmez**. Yalnızca `modul_tr` (ör. "Gövde ve konfor") ve marka/model/paket bağlamı.
 
-Veri standartları: `VERI_STANDARTLARI.md`.
+Veri standartları: [docs/standartlar/veri.md](../../docs/standartlar/veri.md).

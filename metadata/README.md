@@ -2,6 +2,8 @@
 
 Telif içermeyen kimlik ve eşleme katmanı. OEM XML ve zip arşivi **yok**.
 
+Standartlar: [STANDARTLAR.md](../STANDARTLAR.md) · [docs/standartlar/veri.md](../docs/standartlar/veri.md) · [docs/standartlar/profil.md](../docs/standartlar/profil.md)
+
 ## Genişleme (yeni model/paket)
 
 1. `metadata/brands/{marka}/models/{model}/trims.json` — paket listesi + `profilePath`
@@ -42,4 +44,4 @@ Kullanıcı arayüzü: yalnızca `modul_tr`. Uzman adresi yalnızca gizli `<deta
 
 ## BYOD
 
-Gerçek arşiv cihazda. Ayrıntı: `VERI_STANDARTLARI.md`.
+Gerçek arşiv cihazda. Ayrıntı: [docs/standartlar/veri.md](../docs/standartlar/veri.md) (BYOD).
