@@ -1238,6 +1238,11 @@ function renderSettings() {
         className: "mono",
         text: "Önerilen repo: github.com/ykslaksoy/arac-ozellik-bakim",
       }),
+      el("p", {
+        className: "settings-legal",
+        innerHTML:
+          '<a href="kullanim-sartlari.html" class="settings-legal-link">Kullanım Şartları</a>',
+      }),
     ]),
   );
 }

@@ -994,6 +994,16 @@ table.data th {
   margin: 0 0 0.65rem;
 }
 
+.settings-legal {
+  margin-top: 1rem;
+  font-size: 0.92rem;
+}
+
+.settings-legal-link {
+  font-weight: 600;
+  color: var(--accent, #0d6efd);
+}
+
 .byod-block {
   margin-bottom: 1.25rem;
   padding-bottom: 1.25rem;
@@ -1124,4 +1134,49 @@ table.data th {
   body {
     background: #e8ecee;
   }
+}
+
+.legal-page .legal-main {
+  padding-bottom: 2rem;
+}
+
+.legal-doc {
+  max-width: 36rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.legal-doc h1.legal-title {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+
+.legal-doc h2 {
+  font-size: 1.05rem;
+  color: var(--ink);
+  margin: 1.35rem 0 0.45rem;
+}
+
+.legal-doc p {
+  margin: 0 0 0.75rem;
+}
+
+.legal-meta {
+  font-size: 0.88rem;
+}
+
+.legal-doc a {
+  color: var(--accent, #0d6efd);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.legal-back {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line, #e2e6e8);
 }
