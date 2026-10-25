@@ -1,5 +1,33 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "cleanUrls": false
+  "cleanUrls": false,
+  "headers": [
+    {
+      "source": "/",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/index.html",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/js/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/fuel-epdk",
+      "destination": "https://turkpidya.com/wp-json/turkpidya-data/v1/fuel"
+    },
+    {
+      "source": "/api/fuel-opet",
+      "destination": "https://api.opet.com.tr/api/fuelprices/prices?ProvinceCode=34&IncludeAllProducts=true"
+    },
+    {
+      "source": "/api/fuel-tpo",
+      "destination": "https://www.tppd.com.tr/istanbul-akaryakit-fiyatlari"
+    }
+  ]
 }

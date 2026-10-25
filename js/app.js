@@ -25,19 +25,48 @@ import {
   HINT_KEY,
   HOME_ACTIONS_BOTTOM,
   HOME_ACTIONS_TOP,
+  ORBIT_SLOT_COUNT,
+  ORBIT_SLOTS,
   TAB_ITEMS,
   clampHeroIndex,
-  heroVisualIndex,
+  heroImageSrc,
   heroSlides,
-  loopedHeroSlides,
+  heroVisualIndex,
+  resolveHeroSwipeDelta,
   homeMetrics,
   homeVehicle,
   iconSvg,
+  isMegane3Vehicle,
+  loopedHeroSlides,
   maybeSeedDemo,
   metricCards,
+  normalizeOrbitSlots,
+  orbitFillStatus,
   tabActive,
   userHeroPhotos,
+  validateOrbitSlots,
 } from "./home.js";
+import {
+  applyPumpPricesToDemoFuels,
+  formatPumpHint,
+  loadFuelPrices,
+} from "./fuelPrices.js";
+import {
+  clearByodDatabase,
+  fingerprintZipFile,
+  getByodDataStatus,
+  hasImportedDatabase,
+  recordDataSourceConsent,
+  saveFingerprint,
+} from "./byodDatabase.js";
+import {
+  expertModuleDetails,
+  loadCatalog,
+  loadEcuSet,
+  loadProfile,
+  matchCatalogPackage,
+  userVisibleModules,
+} from "./vehicleMetadata.js";
 
 const YAKIT = ["Benzin", "Dizel", "LPG", "Hibrit", "Elektrik"];
 const BAKIM_TUR = [
@@ -53,8 +82,11 @@ const BAKIM_TUR = [
 let state = loadState();
 let dialogMode = null;
 let editId = null;
+let heroSlideIndex = DEFAULT_HERO_INDEX;
 let filterVehicleId = "";
 let filterMonth = currentYearMonth();
+/** @type {import("./fuelPrices.js").FALLBACK_FUEL_PRICES | null} */
+let pumpPrices = null;
 
 const app = document.getElementById("app");
 const dialog = document.getElementById("formDialog");
@@ -62,9 +94,23 @@ const form = document.getElementById("entityForm");
 const dialogTitle = document.getElementById("dialogTitle");
 const dialogFields = document.getElementById("dialogFields");
 const tabbar = document.getElementById("tabbar");
-let heroSlideIndex = DEFAULT_HERO_INDEX;
 
 maybeSeedDemo(state, saveState);
+
+async function refreshLiveFuelPrices({ force = false } = {}) {
+  try {
+    const prices = await loadFuelPrices({ force });
+    pumpPrices = prices;
+    const next = applyPumpPricesToDemoFuels(state, prices);
+    if (next !== state) {
+      state.fuels = next.fuels;
+      persist();
+    }
+    if (currentPath() === "/") route();
+  } catch {
+    /* fallback seed rakamları kalsın */
+  }
+}
 
 function persist() {
   saveState(state);
@@ -112,10 +158,10 @@ function route() {
   else if (path === "/hatirlaticilar") renderReminders();
   else if (path === "/ayarlar") renderSettings();
   else if (path === "/tara") renderPlaceholder("Tara", "Plaka veya evrak taraması yakında. Viewfinder ile belge çekeceksiniz.");
-  else if (path === "/ariza") renderPlaceholder("Arıza", "Arıza kayıtları yakında. OBD bağlantısı yok; kodları elle girebilirsiniz.");
-  else if (path === "/gizli") renderPlaceholder("Gizli özellik", "Gizli özellik listesi yakında. Bu ekran yalnızca yer tutucudur.");
+  else if (path === "/ariza") renderAriza();
+  else if (path === "/gizli") renderGizli();
   else if (path === "/ekspertiz") renderPlaceholder("Ekspertiz", "Ekspertiz notları yakında. Hasar ve ekspertiz kaydı burada tutulacak.");
-  else if (path === "/performans") renderPlaceholder("Performans", "Tüketim ve masraf eğrisi yakında. Özet sayfasındaki veriler korunur.");
+  else if (path === "/performans") renderPlaceholder("Performans", "Yakıt tüketimi ve masraf eğrisi yakında. Güç/performans grafikleri ayrı değerlendirilecek; özet sayfasındaki L/100 verileri korunur.");
   else renderHome();
 }
 
@@ -279,6 +325,7 @@ function setHeroTrack(track, index, length, options = {}) {
 
 function bindHeroCarousel(stage, track, dots, length) {
   let startX = 0;
+  let lastDx = 0;
   let dragging = false;
   let origin = 0;
 
@@ -302,9 +349,10 @@ function bindHeroCarousel(stage, track, dots, length) {
   });
 
   stage.addEventListener("pointerdown", (e) => {
-    if (e.target.closest(".foto-chip, .hero-dots")) return;
+    if (e.target.closest(".foto-chip, .hero-dots, .hero-nav, button")) return;
     dragging = true;
     startX = e.clientX;
+    lastDx = 0;
     origin = heroSlideIndex;
     stage.classList.add("is-dragging");
     stage.setPointerCapture(e.pointerId);
@@ -312,26 +360,29 @@ function bindHeroCarousel(stage, track, dots, length) {
   stage.addEventListener("pointermove", (e) => {
     if (!dragging) return;
     const dx = e.clientX - startX;
+    lastDx = dx;
     const w = heroStageWidth(stage) || 1;
     const visual = heroVisualIndex(origin, length);
-    track.style.transform = `translate3d(${-(visual * w) - dx}px, 0, 0)`;
+    track.style.transform = `translate3d(${-(visual * w) + dx}px, 0, 0)`;
   });
   const end = (e) => {
     if (!dragging) return;
     dragging = false;
     stage.classList.remove("is-dragging");
-    const dx = e.clientX - startX;
-    if (dx > 40) go(origin + 1);
-    else if (dx < -40) go(origin - 1);
+    const dx = e.pointerType === "mouse" ? e.clientX - startX : lastDx;
+    const delta = resolveHeroSwipeDelta(dx);
+    if (delta) go(origin + delta);
     else go(origin);
   };
   stage.addEventListener("pointerup", end);
   stage.addEventListener("pointercancel", end);
 
   stage.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") go(heroSlideIndex + 1);
-    if (e.key === "ArrowLeft") go(heroSlideIndex - 1);
+    if (e.key === "ArrowLeft") go(heroSlideIndex + 1);
+    if (e.key === "ArrowRight") go(heroSlideIndex - 1);
   });
+
+  stage._heroGo = go;
 
   if (typeof ResizeObserver === "function") {
     const ro = new ResizeObserver(() => {
@@ -367,64 +418,274 @@ function persistVehiclePatch(id, patch) {
   persist();
 }
 
+function paintOrbitStatus(elStatus, slots) {
+  const check = validateOrbitSlots(slots, { allowEmpty: true });
+  const status = check.status || orbitFillStatus(slots);
+  elStatus.textContent = status.complete
+    ? `Hazır · ${ORBIT_SLOT_COUNT}/${ORBIT_SLOT_COUNT} açı`
+    : status.filled === 0
+      ? `Megane III varsayılan orbit · ${ORBIT_SLOT_COUNT} açı yükleyerek değiştirin`
+      : check.message;
+  elStatus.className = `orbit-status${status.complete ? " is-ok" : status.filled ? " is-warn" : ""}`;
+}
+
+function openOrbitUpload(vehicle) {
+  dialogMode = "orbit";
+  editId = vehicle.id;
+  const slots = normalizeOrbitSlots(vehicle);
+  dialogTitle.textContent = "Orbit fotoğrafları (8 açı)";
+  const saveBtn = document.getElementById("dialogSave");
+  if (saveBtn) saveBtn.textContent = "Uygula";
+
+  const statusEl = el("p", { className: "orbit-status" });
+  paintOrbitStatus(statusEl, slots);
+
+  const grid = el("div", { className: "orbit-slot-grid" });
+
+  const refreshSlot = (index) => {
+    const card = grid.children[index];
+    if (!card) return;
+    const preview = card.querySelector(".orbit-slot-preview");
+    const src = slots[index];
+    preview.replaceChildren();
+    if (src) {
+      preview.append(el("img", { src, alt: ORBIT_SLOTS[index].shortLabel }));
+      card.classList.add("is-filled");
+    } else {
+      preview.append(el("span", { className: "orbit-slot-empty", text: "Yükle" }));
+      card.classList.remove("is-filled");
+    }
+    paintOrbitStatus(statusEl, slots);
+  };
+
+  for (const slot of ORBIT_SLOTS) {
+    const card = el("div", {
+      className: `orbit-slot${slots[slot.index] ? " is-filled" : ""}`,
+      "data-orbit-index": String(slot.index),
+    });
+    const preview = el("div", { className: "orbit-slot-preview" });
+    if (slots[slot.index]) {
+      preview.append(el("img", { src: slots[slot.index], alt: slot.shortLabel }));
+    } else {
+      preview.append(el("span", { className: "orbit-slot-empty", text: "Yükle" }));
+    }
+    const file = el("input", {
+      type: "file",
+      accept: "image/*",
+      className: "orbit-slot-input",
+      "aria-label": slot.label,
+    });
+    file.addEventListener("change", async (e) => {
+      const files = [...(e.target.files || [])];
+      e.target.value = "";
+      if (!files.length) return;
+      if (files.length > 1) {
+        alert(`Bu slota tek fotoğraf. Toplu yükleme için “8’ini birden seç” kullanın.`);
+        return;
+      }
+      const dataUrl = await readCompressedPhoto(files[0]);
+      if (!dataUrl) return;
+      slots[slot.index] = dataUrl;
+      refreshSlot(slot.index);
+    });
+    const clear = el("button", {
+      type: "button",
+      className: "orbit-slot-clear",
+      text: "Sil",
+      onClick: () => {
+        slots[slot.index] = "";
+        refreshSlot(slot.index);
+      },
+    });
+    card.append(
+      el("div", { className: "orbit-slot-meta" }, [
+        el("strong", { text: slot.label }),
+        el("span", { text: slot.guide }),
+      ]),
+      preview,
+      el("div", { className: "orbit-slot-actions" }, [
+        el("label", { className: "btn btn-ghost btn-sm orbit-slot-pick" }, ["Seç", file]),
+        clear,
+      ]),
+    );
+    grid.append(card);
+  }
+
+  const bulk = el("input", {
+    type: "file",
+    accept: "image/*",
+    multiple: "true",
+    className: "orbit-bulk-input",
+  });
+  bulk.addEventListener("change", async (e) => {
+    const files = [...(e.target.files || [])];
+    e.target.value = "";
+    if (!files.length) return;
+    if (files.length > ORBIT_SLOT_COUNT) {
+      alert(
+        `En fazla ${ORBIT_SLOT_COUNT} fotoğraf. ${files.length - ORBIT_SLOT_COUNT} fazla seçildi.`,
+      );
+      return;
+    }
+    if (files.length !== ORBIT_SLOT_COUNT) {
+      alert(
+        `Tam ${ORBIT_SLOT_COUNT} fotoğraf seçin (sıra: ön → sol çapraz → … → sağ ön çapraz). Şu an ${files.length} seçili.`,
+      );
+      return;
+    }
+    for (let i = 0; i < ORBIT_SLOT_COUNT; i++) {
+      const dataUrl = await readCompressedPhoto(files[i]);
+      if (!dataUrl) {
+        alert(`${i + 1}. fotoğraf okunamadı.`);
+        return;
+      }
+      slots[i] = dataUrl;
+      refreshSlot(i);
+    }
+  });
+
+  const tools = el("div", { className: "orbit-tools" }, [
+    el("label", { className: "btn btn-ghost" }, [
+      "8’ini birden seç",
+      bulk,
+    ]),
+    el("button", {
+      type: "button",
+      className: "btn btn-ghost",
+      text: isMegane3Vehicle(vehicle) ? "Megane varsayılanına dön" : "Orbit’i temizle",
+      onClick: () => {
+        for (let i = 0; i < ORBIT_SLOT_COUNT; i++) slots[i] = "";
+        for (let i = 0; i < ORBIT_SLOT_COUNT; i++) refreshSlot(i);
+        persistVehiclePatch(vehicle.id, { orbit: [], foto: "", fotos: [] });
+        heroSlideIndex = DEFAULT_HERO_INDEX;
+      },
+    }),
+  ]);
+
+  dialogFields.replaceChildren(
+    el("p", {
+      className: "orbit-help",
+      text: "Sıra zorunlu: 1 ön, 2 sol çapraz, 3 sol, 4 sol arka çapraz, 5 arka, 6 arka sağ çapraz, 7 sağ, 8 sağ ön çapraz. Uygulamak için tam 8 fotoğraf gerekir.",
+    }),
+    statusEl,
+    tools,
+    grid,
+  );
+  // stash working slots on dialog for submit
+  dialogFields._orbitSlots = slots;
+  dialog.showModal();
+}
+
 function renderHome() {
   const vehicle = homeVehicle(state);
-  const cards = metricCards(homeMetrics(state));
+  const cards = metricCards(homeMetrics(state), {
+    pumpHint: formatPumpHint(pumpPrices),
+  });
   const showHint = localStorage.getItem(HINT_KEY) !== "1";
   const slides = heroSlides(vehicle);
-  heroSlideIndex = clampHeroIndex(heroSlideIndex, slides.length);
+  heroSlideIndex = clampHeroIndex(heroSlideIndex, slides.length || 1);
 
   const track = el("div", { className: "hero-track" });
-  for (const src of loopedHeroSlides(slides)) {
-    const slide = el("div", { className: "hero-slide" });
+  const looped = loopedHeroSlides(slides);
+  if (!looped.length) {
+    const slide = el("div", { className: "hero-slide hero-slide-empty" });
     slide.append(
-      el("img", {
-        className: "hero-photo",
-        src,
-        alt: "",
-        draggable: "false",
+      el("p", {
+        className: "hero-empty",
+        text: "8 açı fotoğrafı yükleyin (Foto)",
       }),
     );
     track.append(slide);
+  } else {
+    for (const src of looped) {
+      const slide = el("div", { className: "hero-slide" });
+      slide.append(
+        el("img", {
+          className: "hero-photo",
+          src,
+          alt: "",
+          draggable: "false",
+        }),
+      );
+      track.append(slide);
+    }
   }
+
+  const prevBtn = el("button", {
+    type: "button",
+    className: "hero-nav hero-nav-prev",
+    "aria-label": "Sola çevir",
+  });
+  prevBtn.innerHTML = iconSvg("chevronLeft");
+  const nextBtn = el("button", {
+    type: "button",
+    className: "hero-nav hero-nav-next",
+    "aria-label": "Sağa çevir",
+  });
+  nextBtn.innerHTML = iconSvg("chevronRight");
 
   const stage = el("div", {
     className: "hero-stage",
     tabindex: "0",
-    "aria-label": "Arabayı kaydırarak diğer açıları görün",
-  }, [track]);
+    "aria-label": "Arabayı oklarla veya sürükleyerek çevirin",
+  }, [track, prevBtn, nextBtn]);
 
   const dots = el("div", { className: "hero-dots" });
   paintHeroDots(dots, heroSlideIndex, slides.length);
   bindHeroCarousel(stage, track, dots, slides.length);
 
-  const foto = el("label", { className: "foto-chip" });
-  foto.innerHTML = `${iconSvg("camera")}<span>Foto</span>`;
-  foto.append(
-    el("input", {
-      type: "file",
-      accept: "image/*",
-      onChange: async (e) => {
-        const dataUrl = await readCompressedPhoto(e.target.files?.[0]);
-        e.target.value = "";
-        if (!dataUrl || !vehicle) return;
-        const fotos = userHeroPhotos(vehicle).filter((src) => src !== dataUrl);
-        fotos.push(dataUrl);
-        persistVehiclePatch(vehicle.id, { foto: dataUrl, fotos });
-        heroSlideIndex = heroSlides({ ...vehicle, foto: dataUrl, fotos }).length - 1;
-        route();
-      },
-    }),
-  );
+  let navLock = false;
+  const goPrev = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (navLock) return;
+    navLock = true;
+    stage._heroGo?.(heroSlideIndex + 1);
+    setTimeout(() => {
+      navLock = false;
+    }, 260);
+  };
+  const goNext = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (navLock) return;
+    navLock = true;
+    stage._heroGo?.(heroSlideIndex - 1);
+    setTimeout(() => {
+      navLock = false;
+    }, 260);
+  };
+  // pointerdown: touch/pen/mouse (bazı otomasyon click üretmez)
+  prevBtn.addEventListener("pointerdown", goPrev);
+  nextBtn.addEventListener("pointerdown", goNext);
+  prevBtn.addEventListener("click", goPrev);
+  nextBtn.addEventListener("click", goNext);
 
-  const hero = el("section", { className: "hero-card" }, [stage, dots, foto]);
+  const foto = el("button", {
+    type: "button",
+    className: "foto-chip",
+    "aria-label": "Orbit fotoğraflarını yükle",
+  });
+  foto.innerHTML = `${iconSvg("camera")}<span>Foto</span>`;
+  foto.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!vehicle) return;
+    openOrbitUpload(vehicle);
+  });
+
+  const hero = el("section", { className: "hero-card" }, [
+    stage,
+    dots,
+    foto,
+  ]);
 
   const home = el("div", { className: "home" }, [hero]);
 
   if (showHint) {
     const hint = el("div", { className: "home-hint" });
     const copy = el("p");
-    copy.innerHTML = `${iconSvg("bulb")}<span>İpucu · Arabayı sürükleyerek çevirebilirsiniz</span>`;
+    copy.innerHTML = `${iconSvg("bulb")}<span>İpucu · Oklar veya sürükleme ile çevirin</span>`;
     hint.append(
       copy,
       el("button", {
@@ -463,6 +724,250 @@ function renderPlaceholder(title, text) {
   );
 }
 
+function dataNoticeBanner(message) {
+  return el("div", { className: "data-notice-banner", role: "note" }, [
+    el("p", { text: message }),
+    el("a", {
+      href: "#/ayarlar",
+      "data-nav": "",
+      className: "data-notice-banner-link",
+      text: "Veri yönetimi",
+    }),
+  ]);
+}
+
+function renderDataManagementSection() {
+  const status = getByodDataStatus();
+  let consentChecked = status.consent.accepted;
+  const statusLine = el("p", {
+    className: "byod-status mono",
+    text: status.import.imported
+      ? `Yüklü: ${status.import.fileName} · ${status.import.fingerprintSha256?.slice(0, 12)}…`
+      : "Henüz ECU veritabanı içe aktarılmadı.",
+  });
+
+  const consentRow = el("label", { className: "byod-consent" });
+  const consentInput = el("input", { type: "checkbox" });
+  consentInput.checked = consentChecked;
+  consentInput.addEventListener("change", () => {
+    consentChecked = consentInput.checked;
+    recordDataSourceConsent(consentChecked);
+    statusLine.textContent = getByodDataStatus().import.imported
+      ? statusLine.textContent
+      : "Henüz ECU veritabanı içe aktarılmadı.";
+  });
+  consentRow.append(
+    consentInput,
+    el("span", {
+      text:
+        "Bu dosyanın kullanım hakkına sahip olduğumu ve verilerin yalnızca cihazımda işleneceğini onaylıyorum.",
+    }),
+  );
+
+  const fileInput = el("input", {
+    type: "file",
+    accept: ".zip,application/zip",
+    style: "display:none",
+  });
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!getByodDataStatus().consent.accepted) {
+      alert("Önce onay kutusunu işaretleyin.");
+      return;
+    }
+    try {
+      const meta = await fingerprintZipFile(file);
+      const saved = saveFingerprint(meta);
+      if (!saved.ok) {
+        alert("Kayıt başarısız. Onay gerekli olabilir.");
+        return;
+      }
+      statusLine.textContent = `Yüklü: ${meta.fileName} · ${meta.fingerprintSha256.slice(0, 12)}…`;
+      route();
+    } catch {
+      alert("Dosya okunamadı.");
+    }
+  });
+
+  const importBtn = el("button", {
+    type: "button",
+    className: "btn btn-primary",
+    text: "ECU veritabanı yükle (.zip)",
+    onClick: () => fileInput.click(),
+  });
+
+  const clearBtn = el("button", {
+    type: "button",
+    className: "btn btn-ghost",
+    text: "İçe aktarma kaydını temizle",
+    onClick: () => {
+      if (!hasImportedDatabase() && !getByodDataStatus().consent.accepted) return;
+      if (!confirm("Cihazdaki ECU içe aktarma kaydı ve onay silinsin mi?")) return;
+      clearByodDatabase();
+      consentInput.checked = false;
+      consentChecked = false;
+      statusLine.textContent = "Henüz ECU veritabanı içe aktarılmadı.";
+      route();
+    },
+  });
+
+  const bullets = el("ul", { className: "byod-bullets" });
+  for (const line of [
+    "ECU veritabanı arşivi (.zip) repoda veya uygulama paketinde yok; kendi veritabanınızı cihaza aktarırsınız (BYOD).",
+    "Edindiğiniz arşivi yalnızca bu cihaza içe aktarın; DDT/OEM XML dağıtılmaz.",
+    "İçe aktarma bilgisi (dosya adı, SHA-256) yalnızca bu cihazda saklanır.",
+    "Drive linki veya üçüncü taraf paket dağıtımı desteklenmez.",
+    "Standartlar: github.com/ykslaksoy/arac-ozellik-bakim → STANDARTLAR.md (terimler: docs/standartlar/terimler.md)",
+  ]) {
+    bullets.append(el("li", { text: line }));
+  }
+
+  return el("section", { className: "settings-block byod-block" }, [
+    el("h2", { className: "settings-subtitle", text: "Veri yönetimi" }),
+    bullets,
+    consentRow,
+    el("div", { className: "cta-row", style: "margin:0.75rem 0" }, [
+      importBtn,
+      clearBtn,
+      fileInput,
+    ]),
+    statusLine,
+    el("p", {
+      className: "hint",
+      text: "Tüm standartlar: STANDARTLAR.md (repo) — https://github.com/ykslaksoy/arac-ozellik-bakim/blob/main/STANDARTLAR.md",
+    }),
+    el("p", {
+      className: "hint",
+      text: "Bu sürümde arşiv yalnızca parmak izi için okunur; tam tanı eşlemesi sonraki fazda. Gizli özellik listesi metadata ile bağlanacak.",
+    }),
+  ]);
+}
+
+function renderGizli() {
+  const wrap = el("div", { className: "page-pad" });
+  wrap.append(
+    dataNoticeBanner(
+      "ECU tanım dosyaları yalnızca cihazınızda; ekranda marka, model ve paket adı gösterilir.",
+    ),
+    sectionHead(
+      "Gizli özellik",
+      hasImportedDatabase()
+        ? "ECU veritabanı kaydı var; gizli özellik listesi yakında metadata ile bağlanacak."
+        : "Önce Ayarlar → Veri yönetimi bölümünden kendi ECU veritabanınızı içe aktarın.",
+    ),
+  );
+  app.append(wrap);
+}
+
+function renderAriza() {
+  const wrap = el("div", { className: "page-pad" });
+  wrap.append(
+    sectionHead(
+      "Arıza",
+      "OBD bağlı değil; arıza kodlarını elle kaydedin. Modül adları Türkçe servis dilindedir.",
+    ),
+    el("p", { className: "ariza-loading", text: "Profil ve modül listesi yükleniyor…" }),
+  );
+  app.append(wrap);
+
+  (async () => {
+    try {
+      const catalog = await loadCatalog();
+      const pkg = matchCatalogPackage(homeVehicle(state), catalog);
+      if (!pkg?.profilePath) {
+        wrap.querySelector(".ariza-loading").textContent =
+          "Henüz tanımlı profil yok.";
+        return;
+      }
+      const [profile, ecuSet] = await Promise.all([
+        loadProfile(pkg.profilePath),
+        loadEcuSet(pkg.ecuSetId),
+      ]);
+      const loading = wrap.querySelector(".ariza-loading");
+      loading?.remove();
+
+      const context = el("p", {
+        className: "ariza-context",
+        text: `${pkg.brandLabel} ${pkg.modelLabel} · ${pkg.trimLabel} paket`,
+      });
+      wrap.insertBefore(context, wrap.firstChild?.nextSibling || null);
+
+      const modules = userVisibleModules(ecuSet);
+      const modList = el("ul", { className: "module-list" });
+      for (const m of modules) {
+        modList.append(
+          el("li", {}, [el("span", { className: "module-name", text: m.modul_tr })]),
+        );
+      }
+      wrap.append(
+        el("section", { className: "ariza-section" }, [
+          el("h2", { className: "settings-subtitle", text: "Araç modülleri" }),
+          el("p", {
+            className: "hint",
+            text: "Tanıda hangi bölümle ilgili olduğunu bu listeden seçin; kısaltma veya dosya adı gösterilmez.",
+          }),
+          modList,
+        ]),
+      );
+
+      const expert = el("details", { className: "expert-panel" });
+      expert.append(el("summary", { text: "Uzman: adres kimlikleri (varsayılan gizli)" }));
+      const expertList = el("ul", { className: "expert-list mono" });
+      for (const row of expertModuleDetails(ecuSet)) {
+        expertList.append(
+          el("li", {
+            text: `${row.modul_tr} · ${row.modul_id}${row.id_hex ? ` · ${row.id_hex}` : ""}`,
+          }),
+        );
+      }
+      expert.append(expertList);
+      wrap.append(expert);
+
+      const records = profile.arizaKayitlari || [];
+      const list = el("div", { className: "list" });
+      if (!records.length) {
+        list.append(emptyState("Kayıtlı arıza yok. Kod ve modülü elle ekleyeceksiniz."));
+      } else {
+        for (const r of records) {
+          list.append(
+            el("article", { className: "item" }, [
+              el("div", {}, [
+                el("h3", {
+                  className: "item-title",
+                  text: `${r.kod || "—"} · ${r.modul_tr || "Modül"}`,
+                }),
+                el("p", {
+                  className: "item-meta",
+                  text: [r.aciklamaTr, r.tarih ? fmtDate(r.tarih) : null]
+                    .filter(Boolean)
+                    .join(" · "),
+                }),
+              ]),
+            ]),
+          );
+        }
+      }
+      wrap.append(
+        el("section", { className: "ariza-section" }, [
+          el("h2", { className: "settings-subtitle", text: "Kayıtlar" }),
+          list,
+          el("p", {
+            className: "hint",
+            text: "Yeni kayıt formu sonraki sürümde; şimdilik örnek profil JSON’daki kayıtlar gösterilir.",
+          }),
+        ]),
+      );
+    } catch {
+      const loading = wrap.querySelector(".ariza-loading");
+      if (loading) {
+        loading.textContent = "Metadata yüklenemedi. Statik sunucu ile açın.";
+      }
+    }
+  })();
+}
+
 function stat(label, value) {
   return el("div", { className: "stat" }, [
     el("span", { className: "stat-label", text: label }),
@@ -489,20 +994,36 @@ function renderVehicles() {
     return;
   }
 
-  const list = el("div", { className: "list" });
+  const list = el("div", { className: "list list-vehicles" });
   for (const v of state.vehicles) {
+    const thumbSrc = heroImageSrc(v);
+    const thumb = el("div", { className: "item-thumb-wrap" }, [
+      el("img", {
+        className: "item-thumb",
+        src: thumbSrc,
+        alt: "",
+        loading: "lazy",
+      }),
+    ]);
+    const titleBits = [v.marka, v.model].filter(Boolean).join(" ");
     list.append(
-      el("article", { className: "item" }, [
-        el("div", {}, [
-          el("h3", { className: "item-title", text: `${v.plaka}` }),
+      el("article", { className: "item item-vehicle" }, [
+        thumb,
+        el("div", { className: "item-body" }, [
+          el("h3", { className: "item-title", text: v.plaka || "Plakasız" }),
+          titleBits
+            ? el("p", { className: "item-subtitle", text: titleBits })
+            : null,
           el("p", {
             className: "item-meta",
-            text: `${v.marka} ${v.model} · ${v.yil || "—"} · ${v.yakit || "—"} · ${Number(v.km || 0).toLocaleString("tr-TR")} km`,
+            text: [v.yil || null, v.yakit || null, `${Number(v.km || 0).toLocaleString("tr-TR")} km`]
+              .filter(Boolean)
+              .join(" · "),
           }),
           v.renk || v.motor || v.sasi
             ? el("p", {
-                className: "item-meta",
-                text: [v.renk && `Renk: ${v.renk}`, v.motor && `Motor: ${v.motor}`, v.sasi && `Şasi: ${v.sasi}`]
+                className: "item-meta item-meta-soft",
+                text: [v.renk && `Renk ${v.renk}`, v.motor && `Motor ${v.motor}`, v.sasi && `Şasi ${v.sasi}`]
                   .filter(Boolean)
                   .join(" · "),
               })
@@ -675,7 +1196,8 @@ function renderReminders() {
 
 function renderSettings() {
   app.append(
-    sectionHead("Ayarlar", "Yedekleme, içe aktarma ve veri temizliği"),
+    sectionHead("Ayarlar", "Yedekleme, kendi ECU veritabanınız ve veri temizliği"),
+    renderDataManagementSection(),
     el("div", { className: "settings-block" }, [
       el("p", {
         text: "Tüm veri bu tarayıcının localStorage alanındadır (araç, bakım, yakıt, masraf, hatırlatıcı). Sunucuya veya üçüncü tarafa gitmez.",
@@ -715,6 +1237,11 @@ function renderSettings() {
       el("p", {
         className: "mono",
         text: "Önerilen repo: github.com/ykslaksoy/arac-ozellik-bakim",
+      }),
+      el("p", {
+        className: "settings-legal",
+        innerHTML:
+          '<a href="kullanim-sartlari.html" class="settings-legal-link">Kullanım Şartları</a>',
       }),
     ]),
   );
@@ -1205,6 +1732,8 @@ function openVehicleForm(vehicle) {
   dialogMode = "vehicle";
   editId = vehicle?.id || null;
   dialogTitle.textContent = vehicle ? "Aracı düzenle" : "Yeni araç";
+  const saveBtn = document.getElementById("dialogSave");
+  if (saveBtn) saveBtn.textContent = "Kaydet";
   dialogFields.replaceChildren(
     el("div", { className: "form-grid" }, [
       plateField(vehicle?.plaka || ""),
@@ -1331,9 +1860,36 @@ form.addEventListener("submit", (e) => {
   if (!submitter || submitter.value !== "save") {
     dialogMode = null;
     editId = null;
+    const saveBtn = document.getElementById("dialogSave");
+    if (saveBtn) saveBtn.textContent = "Kaydet";
     return;
   }
   e.preventDefault();
+
+  if (dialogMode === "orbit") {
+    const slots = dialogFields._orbitSlots || normalizeOrbitSlots({});
+    const check = validateOrbitSlots(slots);
+    if (!check.ok) {
+      alert(check.message);
+      return;
+    }
+    const vehicleId = editId;
+    persistVehiclePatch(vehicleId, {
+      orbit: check.slots,
+      foto: check.slots[DEFAULT_HERO_INDEX] || check.slots[0] || "",
+      fotos: check.slots,
+    });
+    heroSlideIndex = DEFAULT_HERO_INDEX;
+    dialog.close();
+    dialogMode = null;
+    editId = null;
+    dialogFields._orbitSlots = null;
+    const saveBtn = document.getElementById("dialogSave");
+    if (saveBtn) saveBtn.textContent = "Kaydet";
+    route();
+    return;
+  }
+
   const data = readForm();
 
   if (dialogMode === "vehicle") {
@@ -1355,10 +1911,11 @@ form.addEventListener("submit", (e) => {
       motor: data.motor,
       renk: data.renk,
       foto: previous?.foto || "",
-      fotos: Array.isArray(previous?.fotos) ? previous.fotos : [],
+      fotos: previous?.fotos || [],
+      orbit: previous?.orbit || [],
     };
     if (editId) {
-      state.vehicles = state.vehicles.map((v) => (v.id === editId ? payload : v));
+      state.vehicles = state.vehicles.map((v) => (v.id === editId ? { ...previous, ...payload } : v));
     } else {
       state.vehicles.push(payload);
     }
@@ -1458,8 +2015,12 @@ form.addEventListener("submit", (e) => {
   dialog.close();
   dialogMode = null;
   editId = null;
+  dialogFields._orbitSlots = null;
+  const saveBtn = document.getElementById("dialogSave");
+  if (saveBtn) saveBtn.textContent = "Kaydet";
   route();
 });
 
 window.addEventListener("hashchange", route);
 route();
+refreshLiveFuelPrices();
