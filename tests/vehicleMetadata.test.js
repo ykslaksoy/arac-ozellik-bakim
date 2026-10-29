@@ -6,6 +6,8 @@ const {
   expandCatalogFromIndex,
   userVisibleModules,
   expertModuleDetails,
+  featurePackJsonPath,
+  userVisibleFeatures,
 } = await import("../js/vehicleMetadata.js");
 
 test("indeks + trims paket listesi ve profilePath", async () => {
@@ -40,4 +42,18 @@ test("icon profil örneği OEM kısaltması içermez", async () => {
   const blob = JSON.stringify(profile);
   assert.ok(!/UCH|BCM|beyin_adi|742_/i.test(blob));
   assert.equal(profile.commandSummaries[0].modul_tr, "Gösterge paneli");
+});
+
+test("feature pack yolu ve kullanıcı görünür alanlar", async () => {
+  assert.equal(
+    featurePackJsonPath("renault.megane3.icon.tr"),
+    "metadata/feature-packs/renault.megane3.icon.tr.json",
+  );
+  const pack = JSON.parse(
+    await readFile("metadata/feature-packs/renault.megane3.icon.tr.json", "utf8"),
+  );
+  const visible = userVisibleFeatures(pack);
+  assert.equal(visible.length, 2);
+  assert.deepEqual(Object.keys(visible[0]).sort(), ["featureId", "label", "summary"]);
+  assert.ok(!JSON.stringify(visible).includes("ddt4all"));
 });

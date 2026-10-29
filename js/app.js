@@ -63,8 +63,10 @@ import {
   expertModuleDetails,
   loadCatalog,
   loadEcuSet,
+  loadFeaturePack,
   loadProfile,
   matchCatalogPackage,
+  userVisibleFeatures,
   userVisibleModules,
 } from "./vehicleMetadata.js";
 
@@ -854,11 +856,75 @@ function renderGizli() {
     sectionHead(
       "Gizli özellik",
       hasImportedDatabase()
-        ? "ECU veritabanı kaydı var; gizli özellik listesi yakında metadata ile bağlanacak."
-        : "Önce Ayarlar → Veri yönetimi bölümünden kendi ECU veritabanınızı içe aktarın.",
+        ? "Metadata özellik listesi; ECU yazma BYOD veritabanı ile eşleştirilir."
+        : "Önce Ayarlar → Veri yönetimi bölümünden kendi ECU veritabanınızı içe aktarın; liste yine metadata’dan okunur.",
     ),
+    el("p", { className: "gizli-loading", text: "Özellik paketi yükleniyor…" }),
   );
   app.append(wrap);
+
+  (async () => {
+    try {
+      const catalog = await loadCatalog();
+      const pkg = matchCatalogPackage(homeVehicle(state), catalog);
+      if (!pkg?.featurePackId) {
+        wrap.querySelector(".gizli-loading").textContent = "Henüz tanımlı özellik paketi yok.";
+        return;
+      }
+      const [pack, profile] = await Promise.all([
+        loadFeaturePack(pkg.featurePackId),
+        pkg.profilePath ? loadProfile(pkg.profilePath) : Promise.resolve(null),
+      ]);
+      wrap.querySelector(".gizli-loading")?.remove();
+
+      const context = el("p", {
+        className: "gizli-context",
+        text: `${pkg.brandLabel} ${pkg.modelLabel} · ${pkg.trimLabel} paket`,
+      });
+      wrap.insertBefore(context, wrap.children[2] || null);
+
+      const summariesById = Object.fromEntries(
+        (profile?.commandSummaries || []).map((row) => [row.featureId, row]),
+      );
+      const features = userVisibleFeatures(pack);
+      const list = el("div", { className: "list" });
+      if (!features.length) {
+        list.append(emptyState("Bu pakette tanımlı özellik yok."));
+      } else {
+        for (const f of features) {
+          const extra = summariesById[f.featureId];
+          list.append(
+            el("article", { className: "item" }, [
+              el("div", {}, [
+                el("h3", { className: "item-title", text: f.label }),
+                el("p", {
+                  className: "item-meta",
+                  text: [f.summary, extra?.riskTr ? `Risk: ${extra.riskTr}` : null]
+                    .filter(Boolean)
+                    .join(" · "),
+                }),
+              ]),
+            ]),
+          );
+        }
+      }
+      wrap.append(
+        el("section", { className: "gizli-section" }, [
+          el("h2", { className: "settings-subtitle", text: "Paket özellikleri" }),
+          el("p", {
+            className: "hint",
+            text: "Aç/kapa ve hex detayları sonraki sürümde; şimdilik kamu metadata etiketleri gösterilir.",
+          }),
+          list,
+        ]),
+      );
+    } catch {
+      const loading = wrap.querySelector(".gizli-loading");
+      if (loading) {
+        loading.textContent = "Metadata yüklenemedi. Statik sunucu ile açın.";
+      }
+    }
+  })();
 }
 
 function renderAriza() {
