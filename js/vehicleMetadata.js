@@ -5,6 +5,7 @@
 
 const INDEX_PATH = "metadata/_index.json";
 const ECU_SET_BASE = "metadata/ecu-sets/";
+const FEATURE_PACK_BASE = "metadata/feature-packs/";
 
 /**
  * @param {import('./vehicleMetadata.js').MetadataIndex} indexDoc
@@ -64,6 +65,10 @@ export function ecuSetJsonPath(ecuSetId) {
   return `${ECU_SET_BASE}${ecuSetId}.json`;
 }
 
+export function featurePackJsonPath(featurePackId) {
+  return `${FEATURE_PACK_BASE}${featurePackId}.json`;
+}
+
 export async function fetchJson(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Metadata yüklenemedi: ${url}`);
@@ -90,6 +95,24 @@ export async function loadEcuSet(ecuSetId) {
 
 export async function loadProfile(profilePath) {
   return fetchJson(profilePath);
+}
+
+export async function loadFeaturePack(featurePackId) {
+  if (!featurePackId) throw new Error("featurePackId gerekli");
+  return fetchJson(featurePackJsonPath(featurePackId));
+}
+
+/**
+ * Kamu özellik paketinden kullanıcı kartları (hex / glob yok).
+ * @param {{ features?: Array<{ featureId: string, label: string, summary?: string }> }} pack
+ */
+export function userVisibleFeatures(pack) {
+  if (!pack?.features) return [];
+  return pack.features.map((f) => ({
+    featureId: f.featureId,
+    label: f.label,
+    summary: f.summary || "",
+  }));
 }
 
 /**
